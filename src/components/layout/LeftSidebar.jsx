@@ -11,6 +11,12 @@ import {
 
 import { SideButton } from "../common/Buttons";
 
+function stripText(html = "") {
+  const div = document.createElement("div");
+  div.innerHTML = html;
+  return (div.textContent || "").replace(/\s+/g, " ").trim();
+}
+
 export default function LeftSidebar({
   pages,
   currentPageId,
@@ -32,18 +38,31 @@ export default function LeftSidebar({
         <b>Trang tài liệu</b>
       </div>
 
-      <div className="page-list">
-        {pages.map((page, index) => (
-          <button
-            type="button"
-            key={page.id}
-            className={`page-item ${page.id === currentPageId ? "active" : ""}`}
-            onClick={() => onSelectPage(page.id)}
-          >
-            <FileText size={16} />
-            <span>{page.title || `Trang ${index + 1}`}</span>
-          </button>
-        ))}
+      <div className="page-thumb-list">
+        {pages.map((page, index) => {
+          const preview = stripText(page.html);
+
+          return (
+            <button
+              type="button"
+              key={page.id}
+              className={`page-thumb ${page.id === currentPageId ? "active" : ""}`}
+              onClick={() => onSelectPage(page.id)}
+            >
+              <div className="page-thumb-paper">
+                <div className="thumb-line strong" />
+                <div className="thumb-line" />
+                <div className="thumb-line short" />
+                {page.figures?.length > 0 && <div className="thumb-figure" />}
+              </div>
+
+              <div className="page-thumb-meta">
+                <b>{page.title || `Trang ${index + 1}`}</b>
+                <span>{preview || "Trang trống"}</span>
+              </div>
+            </button>
+          );
+        })}
       </div>
 
       <button type="button" className="add-page-btn" onClick={onAddPage}>
@@ -68,14 +87,6 @@ export default function LeftSidebar({
         <b>Trạng thái</b>
         <p>{status}</p>
         {savedAt && <small>Lưu lần cuối: {savedAt}</small>}
-      </div>
-
-      <div className="help-card">
-        <b>Cách dùng</b>
-        <p>
-          Soạn trực tiếp trên giấy A4. Sidebar trái quản lý trang. Hình có thể kéo vị trí
-          và kéo góc phải dưới để đổi kích thước.
-        </p>
       </div>
     </aside>
   );

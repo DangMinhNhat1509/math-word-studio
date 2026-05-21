@@ -19,6 +19,7 @@ import {
   savePagesToBrowser,
 } from "./utils/documentStorage";
 
+import { createFigure, ensurePageFigures } from "./utils/figures";
 import { insertInlineMathField, syncMathFields } from "./utils/mathLiveEditor";
 
 import Topbar from "./components/layout/Topbar";
@@ -32,7 +33,7 @@ export default function App() {
   const { rememberSelection, restoreSelection } = useEditorSelection(editorRef);
 
   const [doc, setDoc] = useState(() => {
-    const pages = getInitialPages();
+    const pages = getInitialPages().map(ensurePageFigures);
 
     return {
       pages,
@@ -43,14 +44,16 @@ export default function App() {
   const [activeTool, setActiveTool] = useState("text");
   const [showGrid, setShowGrid] = useState(true);
   const [showAxis, setShowAxis] = useState(false);
-  const [showDiagram, setShowDiagram] = useState(true);
   const [status, setStatus] = useState("Đã sẵn sàng");
   const [savedAt, setSavedAt] = useState(() => getSavedAt());
 
-  const pages = doc.pages;
+  const pages = doc.pages.map(ensurePageFigures);
   const currentPageId = doc.currentPageId;
   const activePageIndex = Math.max(0, pages.findIndex((page) => page.id === currentPageId));
   const activePage = pages[activePageIndex] || pages[0];
+  const figures = activePage?.figures || [];
+  const selectedFigureId = activePage?.selectedFigureId || figures[0]?.id || null;
+  const activeFigure = figures.find((figure) => figure.id === selectedFigureId) || figures[0] || null;
 
   function snapshotCurrentPage(pageList = pages, pageId = currentPageId) {
     if (!editorRef.current) return pageList;
@@ -71,15 +74,13 @@ export default function App() {
 
   function updateCurrentPage(patchOrGetter) {
     setDoc((oldDoc) => {
-      const current = oldDoc.pages.find((page) => page.id === oldDoc.currentPageId);
-      const patch =
-        typeof patchOrGetter === "function"
-          ? patchOrGetter(current)
-          : patchOrGetter;
+      const oldPages = oldDoc.pages.map(ensurePageFigures);
+      const current = oldPages.find((page) => page.id === oldDoc.currentPageId);
+      const patch = typeof patchOrGetter === "function" ? patchOrGetter(current) : patchOrGetter;
 
       return {
         ...oldDoc,
-        pages: oldDoc.pages.map((page) =>
+        pages: oldPages.map((page) =>
           page.id === oldDoc.currentPageId
             ? {
                 ...page,
@@ -93,7 +94,7 @@ export default function App() {
 
   function selectPage(pageId) {
     setDoc((oldDoc) => ({
-      pages: snapshotCurrentPage(oldDoc.pages, oldDoc.currentPageId),
+      pages: snapshotCurrentPage(oldDoc.pages.map(ensurePageFigures), oldDoc.currentPageId),
       currentPageId: pageId,
     }));
 
@@ -142,11 +143,7 @@ export default function App() {
       message,
     });
 
-    setTimeout(() => {
-      updateCurrentPage({
-        html: editorRef.current?.innerHTML || "",
-      });
-    }, 0);
+    setTimeout(() => updateCurrentPage({ html: editorRef.current?.innerHTML || "" }), 0);
   }
 
   function insertSmartFormula(value = "") {
@@ -160,11 +157,7 @@ export default function App() {
       value,
     });
 
-    setTimeout(() => {
-      updateCurrentPage({
-        html: editorRef.current?.innerHTML || "",
-      });
-    }, 0);
+    setTimeout(() => updateCurrentPage({ html: editorRef.current?.innerHTML || "" }), 0);
   }
 
   function insertTextBox() {
@@ -176,16 +169,69 @@ export default function App() {
     );
   }
 
+  function addFigure() {
+    const nextIndex = figures.length + 1;
+    const newFigure = createFigure(nextIndex);
+
+    updateCurrentPage((page) => ({
+      figures: [...(page.figures || []), newFigure],
+      selectedFigureId: newFigure.id,
+    }));
+
+    setActiveTool("shape");
+    setStatus("Đã thêm hình mới. Kéo thanh trên hình để di chuyển.");
+  }
+
+  function deleteFigure(figureId) {
+    updateCurrentPage((page) => {
+      const nextFigures = (page.figures || []).filter((figure) => figure.id !== figureId);
+
+      return {
+        figures: nextFigures,
+        selectedFigureId: nextFigures[0]?.id || null,
+      };
+    });
+
+    setStatus("Đã xóa hình");
+  }
+
+  function selectFigure(figureId) {
+    updateCurrentPage({
+      selectedFigureId: figureId,
+    });
+
+    setActiveTool("shape");
+    setStatus("Đã chọn hình");
+  }
+
+  function updateFigureBox(figureId, box) {
+    updateCurrentPage((page) => ({
+      figures: (page.figures || []).map((figure) =>
+        figure.id === figureId ? { ...figure, box } : figure
+      ),
+      selectedFigureId: figureId,
+    }));
+  }
+
+  function updateFigureDiagram(figureId, diagram) {
+    updateCurrentPage((page) => ({
+      figures: (page.figures || []).map((figure) =>
+        figure.id === figureId ? { ...figure, diagram } : figure
+      ),
+      selectedFigureId: figureId,
+    }));
+  }
+
   function saveDocument() {
     const savedPages = snapshotCurrentPage();
 
     setDoc((oldDoc) => ({
       ...oldDoc,
-      pages: savedPages,
+      pages: savedPages.map(ensurePageFigures),
     }));
 
     savePagesToBrowser({
-      pages: savedPages,
+      pages: savedPages.map(ensurePageFigures),
       setSavedAt,
       setStatus,
     });
@@ -194,8 +240,8 @@ export default function App() {
   function handleCopyText() {
     copyPlainText({
       editorRef,
-      showDiagram,
-      diagram: activePage?.diagram || {},
+      showDiagram: true,
+      diagram: activeFigure?.diagram || {},
       setStatus,
     });
   }
@@ -222,32 +268,6 @@ export default function App() {
   function handlePrint() {
     saveDocument();
     printPdf({ saveDocument: () => {} });
-  }
-
-  function setDiagram(nextDiagram) {
-    updateCurrentPage((page) => {
-      const oldDiagram = page?.diagram || {};
-
-      return {
-        diagram:
-          typeof nextDiagram === "function"
-            ? nextDiagram(oldDiagram)
-            : nextDiagram,
-      };
-    });
-  }
-
-  function setDiagramBox(nextBox) {
-    updateCurrentPage((page) => {
-      const oldBox = page?.diagramBox || {};
-
-      return {
-        diagramBox:
-          typeof nextBox === "function"
-            ? nextBox(oldBox)
-            : nextBox,
-      };
-    });
   }
 
   if (!activePage) {
@@ -288,22 +308,20 @@ export default function App() {
             setShowGrid={setShowGrid}
             showAxis={showAxis}
             setShowAxis={setShowAxis}
-            showDiagram={showDiagram}
-            setShowDiagram={setShowDiagram}
+            showDiagram={figures.length > 0}
+            setShowDiagram={() => {}}
             onBold={() => runCommand("bold")}
             onItalic={() => runCommand("italic")}
             onUnderline={() => runCommand("underline")}
             onHighlight={() =>
-              insertHtml(
-                `<span class="highlight">nội dung cần nhấn mạnh</span>`,
-                "Đã chèn highlight"
-              )
+              insertHtml(`<span class="highlight">nội dung cần nhấn mạnh</span>`, "Đã chèn highlight")
             }
             onAlignLeft={() => runCommand("justifyLeft")}
             onAlignCenter={() => runCommand("justifyCenter")}
             onAlignRight={() => runCommand("justifyRight")}
             onMath={() => insertSmartFormula("")}
             onTextBox={insertTextBox}
+            onAddFigure={addFigure}
           />
 
           <DocumentPage
@@ -314,13 +332,13 @@ export default function App() {
             editorRef={editorRef}
             activeTool={activeTool}
             rememberSelection={rememberSelection}
-            showDiagram={showDiagram}
             showGrid={showGrid}
             showAxis={showAxis}
-            diagram={activePage.diagram}
-            setDiagram={setDiagram}
-            diagramBox={activePage.diagramBox}
-            setDiagramBox={setDiagramBox}
+            figures={figures}
+            selectedFigureId={selectedFigureId}
+            setSelectedFigureId={selectFigure}
+            onUpdateFigureBox={updateFigureBox}
+            onUpdateFigureDiagram={updateFigureDiagram}
             setActiveTool={setActiveTool}
             setStatus={setStatus}
             onInsertSmartFormula={insertSmartFormula}
@@ -332,13 +350,14 @@ export default function App() {
           symbols={SYMBOLS}
           formulas={FORMULAS}
           templates={TEMPLATES}
-          diagram={activePage.diagram}
-          setDiagram={setDiagram}
+          figures={figures}
+          activeFigure={activeFigure}
+          onSelectFigure={selectFigure}
+          onUpdateFigureDiagram={updateFigureDiagram}
+          onDeleteFigure={deleteFigure}
           onInsertSymbol={(symbol) => insertSmartFormula(symbol)}
           onInsertFormula={(formula) => insertSmartFormula(formula)}
-          onInsertTemplate={(template) =>
-            insertHtml(template.html, `Đã chèn mẫu: ${template.name}`)
-          }
+          onInsertTemplate={(template) => insertHtml(template.html, `Đã chèn mẫu: ${template.name}`)}
         />
       </div>
     </div>

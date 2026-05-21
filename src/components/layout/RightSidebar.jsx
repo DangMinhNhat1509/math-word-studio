@@ -1,21 +1,29 @@
-import { Braces, Sigma, Sparkles, Triangle } from "lucide-react";
+import { Braces, CircleDot, Sigma, Sparkles, Triangle } from "lucide-react";
 
 export default function RightSidebar({
   symbols,
   formulas,
   templates,
-  diagram,
-  setDiagram,
+  activeFigure,
+  figures,
+  onSelectFigure,
+  onUpdateFigureDiagram,
+  onDeleteFigure,
   onInsertSymbol,
   onInsertFormula,
   onInsertTemplate,
 }) {
-  function updateDiagram(key, value) {
-    setDiagram({ ...diagram, [key]: value });
-  }
-
   function keepCaret(event) {
     event.preventDefault();
+  }
+
+  function updateDiagram(key, value) {
+    if (!activeFigure) return;
+
+    onUpdateFigureDiagram(activeFigure.id, {
+      ...activeFigure.diagram,
+      [key]: value,
+    });
   }
 
   return (
@@ -75,36 +83,69 @@ export default function RightSidebar({
       </div>
 
       <div className="panel-title spaced">
-        <Triangle size={17} />
-        <b>Sửa hình</b>
+        <CircleDot size={17} />
+        <b>Đối tượng hình</b>
       </div>
 
-      <div className="diagram-settings">
-        <label>
-          Điểm A
-          <input value={diagram.a} onChange={(event) => updateDiagram("a", event.target.value)} />
-        </label>
-        <label>
-          Điểm B
-          <input value={diagram.b} onChange={(event) => updateDiagram("b", event.target.value)} />
-        </label>
-        <label>
-          Điểm C
-          <input value={diagram.c} onChange={(event) => updateDiagram("c", event.target.value)} />
-        </label>
-        <label>
-          Cạnh AB
-          <input value={diagram.ab} onChange={(event) => updateDiagram("ab", event.target.value)} />
-        </label>
-        <label>
-          Cạnh AC
-          <input value={diagram.ac} onChange={(event) => updateDiagram("ac", event.target.value)} />
-        </label>
-        <label>
-          Cạnh BC
-          <input value={diagram.bc} onChange={(event) => updateDiagram("bc", event.target.value)} />
-        </label>
+      <div className="figure-list">
+        {(figures || []).map((figure, index) => (
+          <button
+            type="button"
+            key={figure.id}
+            className={`figure-item ${activeFigure?.id === figure.id ? "active" : ""}`}
+            onClick={() => onSelectFigure(figure.id)}
+          >
+            <Triangle size={15} />
+            {figure.title || `Hình ${index + 1}`}
+          </button>
+        ))}
       </div>
+
+      {activeFigure && (
+        <>
+          <button type="button" className="delete-page-btn compact" onClick={() => onDeleteFigure(activeFigure.id)}>
+            Xóa hình đang chọn
+          </button>
+
+          <div className="panel-title spaced">
+            <Triangle size={17} />
+            <b>Sửa hình đang chọn</b>
+          </div>
+
+          <div className="diagram-settings">
+            <label>
+              Tên điểm A
+              <input value={activeFigure.diagram?.a || ""} onChange={(event) => updateDiagram("a", event.target.value)} />
+            </label>
+            <label>
+              Tên điểm B
+              <input value={activeFigure.diagram?.b || ""} onChange={(event) => updateDiagram("b", event.target.value)} />
+            </label>
+            <label>
+              Tên điểm C
+              <input value={activeFigure.diagram?.c || ""} onChange={(event) => updateDiagram("c", event.target.value)} />
+            </label>
+            <label>
+              Cạnh AB
+              <input value={activeFigure.diagram?.ab || ""} onChange={(event) => updateDiagram("ab", event.target.value)} />
+            </label>
+            <label>
+              Cạnh AC
+              <input value={activeFigure.diagram?.ac || ""} onChange={(event) => updateDiagram("ac", event.target.value)} />
+            </label>
+            <label>
+              Cạnh BC
+              <input value={activeFigure.diagram?.bc || ""} onChange={(event) => updateDiagram("bc", event.target.value)} />
+            </label>
+          </div>
+        </>
+      )}
+
+      {!activeFigure && (
+        <div className="empty-panel">
+          Bấm vào một hình trên trang để sửa tên điểm, cạnh và vị trí.
+        </div>
+      )}
     </aside>
   );
 }

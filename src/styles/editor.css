@@ -198,3 +198,16 @@
     page-break-after: always;
   }
 }
+
+.figure-box.selected {
+  border-color: #0f172a;
+}
+
+.figure-box.selected .figure-toolbar,
+.figure-box.selected .figure-resize {
+  opacity: 1;
+}
+
+.editor *::selection {
+  background: rgba(148, 163, 184, 0.25);
+}
