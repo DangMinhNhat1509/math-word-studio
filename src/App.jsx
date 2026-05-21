@@ -7,18 +7,16 @@ import { useEditorSelection } from "./hooks/useEditorSelection";
 
 import { copyHtml, copyPlainText, insertHtmlToEditor, printPdf, runCommand } from "./utils/editorCommands";
 import { loadDocument, resetDocument, saveDocumentToBrowser } from "./utils/documentStorage";
-import { renderFormulaBlock } from "./utils/mathFormatter";
+import { insertInlineMathField } from "./utils/mathLiveEditor";
 
 import Topbar from "./components/layout/Topbar";
 import LeftSidebar from "./components/layout/LeftSidebar";
 import Toolbar from "./components/layout/Toolbar";
 import RightSidebar from "./components/layout/RightSidebar";
-
 import DocumentPage from "./components/editor/DocumentPage";
 
 export default function App() {
   const editorRef = useRef(null);
-
   const { rememberSelection, restoreSelection } = useEditorSelection(editorRef);
 
   const [activeTool, setActiveTool] = useState("text");
@@ -44,8 +42,16 @@ export default function App() {
     });
   }
 
-  function insertSmartFormula(value) {
-    insertHtml(renderFormulaBlock(value), "Đã chèn công thức chuẩn");
+  function insertSmartFormula(value = "") {
+    setActiveTool("math");
+
+    insertInlineMathField({
+      editorRef,
+      restoreSelection,
+      rememberSelection,
+      setStatus,
+      value,
+    });
   }
 
   function saveDocument() {
@@ -116,6 +122,7 @@ export default function App() {
             onAlignLeft={() => runCommand("justifyLeft")}
             onAlignCenter={() => runCommand("justifyCenter")}
             onAlignRight={() => runCommand("justifyRight")}
+            onMath={() => insertSmartFormula("")}
           />
 
           <DocumentPage

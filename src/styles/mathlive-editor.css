@@ -1,0 +1,63 @@
+.mws-formula {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  margin: 0 2px;
+  max-width: 100%;
+}
+
+math-field.mws-math {
+  display: inline-block;
+  min-width: 1.4em;
+  max-width: 100%;
+  padding: 0 3px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: #0f172a;
+  font-size: 1.04em;
+  line-height: 1.4;
+  vertical-align: middle;
+  box-shadow: none;
+}
+
+math-field.mws-math:focus,
+math-field.mws-math:focus-within {
+  border-color: #94a3b8;
+  background: #f8fafc;
+  outline: none;
+}
+
+.editor .math-block {
+  display: inline-flex !important;
+  margin: 0 2px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.editor .math-source {
+  display: none !important;
+}
+
+.editor.math-mode {
+  cursor: text;
+}
+
+.editor math-field::part(virtual-keyboard-toggle) {
+  display: none;
+}
+
+.edit-hint kbd {
+  display: inline-flex;
+  align-items: center;
+  min-height: 18px;
+  padding: 1px 6px;
+  border: 1px solid #cbd5e1;
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #334155;
+  font-size: 11px;
+  font-weight: 800;
+}

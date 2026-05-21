@@ -1,3 +1,5 @@
+import { getPlainTextWithMath, syncMathFields } from "./mathLiveEditor";
+
 export function runCommand(command, value = null) {
   document.execCommand(command, false, value);
 }
@@ -8,7 +10,7 @@ export function insertHtmlToEditor({
   restoreSelection,
   rememberSelection,
   setStatus,
-  message = "Đã chèn nội dung"
+  message = "Đã chèn nội dung",
 }) {
   editorRef.current?.focus();
   restoreSelection();
@@ -18,7 +20,7 @@ export function insertHtmlToEditor({
 }
 
 export async function copyPlainText({ editorRef, showDiagram, diagram, setStatus }) {
-  const text = editorRef.current?.innerText || "";
+  const text = getPlainTextWithMath(editorRef.current);
   const diagramText = showDiagram
     ? `\n\nHình: Tam giác ${diagram.a}${diagram.b}${diagram.c}; ${diagram.ab}; ${diagram.ac}; ${diagram.bc}`
     : "";
@@ -28,6 +30,7 @@ export async function copyPlainText({ editorRef, showDiagram, diagram, setStatus
 }
 
 export async function copyHtml({ editorRef, setStatus }) {
+  syncMathFields(editorRef.current);
   const html = editorRef.current?.innerHTML || "";
   await navigator.clipboard.writeText(html);
   setStatus("Đã copy HTML");

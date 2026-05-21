@@ -1,15 +1,24 @@
 export function ToolButton({ active, icon: Icon, label, onClick }) {
   return (
-    <button className={active ? "tool active" : "tool"} onClick={onClick}>
-      <Icon size={17} />
-      <span>{label}</span>
+    <button
+      type="button"
+      className={`tool-btn ${active ? "active" : ""}`}
+      onClick={onClick}
+    >
+      {Icon && <Icon size={17} />}
+      {label}
     </button>
   );
 }
 
 export function IconButton({ active, children, onClick, title }) {
   return (
-    <button title={title} className={active ? "icon-btn active" : "icon-btn"} onClick={onClick}>
+    <button
+      type="button"
+      className={`icon-btn ${active ? "active" : ""}`}
+      onClick={onClick}
+      title={title}
+    >
       {children}
     </button>
   );
@@ -21,8 +30,8 @@ export function SideButton({ active, danger, icon: Icon, label, onClick }) {
   if (danger) className += " danger";
 
   return (
-    <button className={className} onClick={onClick}>
-      <Icon size={16} />
+    <button type="button" className={className} onClick={onClick}>
+      {Icon && <Icon size={16} />}
       {label}
     </button>
   );

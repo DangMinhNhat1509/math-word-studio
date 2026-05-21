@@ -1,7 +1,13 @@
+import { useEffect } from "react";
 import { CheckCircle2 } from "lucide-react";
+
 import TriangleDiagram from "../geometry/TriangleDiagram";
-import MathComposer from "./MathComposer";
-import { formatCurrentBlockToMath } from "../../utils/contentEditableMath";
+
+import {
+  autoConvertTypedMathAtCaret,
+  convertCurrentBlockToInlineMath,
+  prepareEditorMath,
+} from "../../utils/mathLiveEditor";
 
 export default function DocumentPage({
   editorRef,
@@ -16,20 +22,46 @@ export default function DocumentPage({
   setStatus,
   onInsertSmartFormula,
 }) {
+  useEffect(() => {
+    prepareEditorMath(editorRef.current);
+  }, [editorRef]);
+
   function handleEditorKeyDown(event) {
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "m") {
+      event.preventDefault();
+      setActiveTool("math");
+      onInsertSmartFormula("");
+      return;
+    }
+
     if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
       event.preventDefault();
 
-      const formatted = formatCurrentBlockToMath(editorRef.current);
+      const converted = convertCurrentBlockToInlineMath(editorRef.current);
 
-      if (formatted) {
+      if (converted) {
         setActiveTool("math");
-        setStatus("Đã chuẩn hóa dòng công thức");
+        setStatus("Đã đổi dòng hiện tại thành công thức inline, vẫn sửa trực tiếp được");
         rememberSelection();
       } else {
         setStatus("Đặt con trỏ trong dòng công thức rồi bấm Ctrl + Enter");
       }
     }
+  }
+
+  function handleEditorInput(event) {
+    prepareEditorMath(editorRef.current);
+
+    if (event.target?.tagName !== "MATH-FIELD") {
+      const converted = autoConvertTypedMathAtCaret(editorRef.current);
+      if (converted) {
+        setStatus("Đã tự đổi thành phân số/căn inline");
+      } else {
+        setStatus("Đang chỉnh sửa");
+      }
+    }
+
+    rememberSelection();
   }
 
   return (
@@ -45,26 +77,24 @@ export default function DocumentPage({
         </div>
 
         <div className="edit-hint">
-          Bấm trực tiếp vào nội dung bên dưới để sửa. Với công thức: chọn nút <b>Công thức</b>, hoặc gõ một dòng rồi bấm <kbd>Ctrl</kbd> + <kbd>Enter</kbd> để chuẩn hóa.
+          Bấm <b>Công thức</b> để chèn công thức ngay tại con trỏ. Gõ <b>1/2</b> trong bài sẽ tự thành phân số. Bấm vào công thức để sửa lại trực tiếp.
         </div>
-
-        {activeTool === "math" && (
-          <MathComposer onInsert={onInsertSmartFormula} />
-        )}
 
         <div
           ref={editorRef}
-          className="editor"
+          className={`editor ${activeTool === "math" ? "math-mode" : ""}`}
           contentEditable
           suppressContentEditableWarning
           onMouseUp={rememberSelection}
           onKeyUp={rememberSelection}
           onKeyDown={handleEditorKeyDown}
-          onFocus={() => {
-            setActiveTool("text");
+          onFocus={(event) => {
+            if (event.target?.tagName !== "MATH-FIELD") {
+              setActiveTool("text");
+            }
             rememberSelection();
           }}
-          onInput={() => setStatus("Đang chỉnh sửa")}
+          onInput={handleEditorInput}
         />
 
         {showDiagram && (
@@ -78,7 +108,7 @@ export default function DocumentPage({
 
         <div className="paper-note">
           <CheckCircle2 size={17} />
-          <span>Bản này đã thêm render công thức chuẩn: phân số, căn, mũ, chỉ số dưới, tích phân và công thức mẫu.</span>
+          <span>Công thức hiện là inline math: nằm chung với chữ, sửa được, hỗ trợ phân số, căn, mũ, chỉ số dưới và tích phân.</span>
         </div>
       </section>
     </div>

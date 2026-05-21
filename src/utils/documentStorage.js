@@ -1,4 +1,5 @@
 import { DEFAULT_DIAGRAM, DEFAULT_HTML } from "../data/defaultDocument";
+import { syncMathFields } from "./mathLiveEditor";
 
 export function loadDocument({ editorRef, setDiagram, setSavedAt }) {
   const savedHtml = localStorage.getItem("mws_document_html");
@@ -17,13 +18,13 @@ export function loadDocument({ editorRef, setDiagram, setSavedAt }) {
     }
   }
 
-  if (savedTime) {
-    setSavedAt(savedTime);
-  }
+  if (savedTime) setSavedAt(savedTime);
 }
 
 export function saveDocumentToBrowser({ editorRef, diagram, setSavedAt, setStatus }) {
   const now = new Date().toLocaleString("vi-VN");
+
+  syncMathFields(editorRef.current);
 
   localStorage.setItem("mws_document_html", editorRef.current?.innerHTML || "");
   localStorage.setItem("mws_diagram", JSON.stringify(diagram));
