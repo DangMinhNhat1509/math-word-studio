@@ -1,16 +1,20 @@
 export const SYMBOLS = [
-  "√", "²", "³", "π", "∞", "≈", "≠", "≤", "≥", "±", "×", "÷",
-  "∠ABC", "△ABC", "⊥", "∥", "∈", "∉", "⇒", "⇔", "∑", "α", "β", "Δ"
+  "√", "²", "³", "π",
+  "∞", "≈", "≠", "≤",
+  "≥", "±", "×", "÷",
+  "∠ABC", "△ABC", "⊥", "∥",
+  "∈", "∉", "⇒", "⇔",
+  "∑", "α", "β", "Δ",
 ];
 
 export const FORMULAS = [
-  "a² + b² = c²",
-  "S = 1/2 · a · h",
+  "a^2 + b^2 = c^2",
+  "S = 1/2 * a * h",
   "C = 2πR",
-  "S = πR²",
-  "Δ = b² - 4ac",
-  "x = (-b ± √Δ) / 2a",
-  "sin²x + cos²x = 1"
+  "S = πR^2",
+  "Delta = b^2 - 4ac",
+  "x = (-b ± sqrt(Delta)) / (2a)",
+  "sin^2 x + cos^2 x = 1",
 ];
 
 export const TEMPLATES = [
@@ -21,23 +25,23 @@ export const TEMPLATES = [
       <p>Cho tam giác <b>ABC</b> vuông tại <b>A</b>. Biết <b>AB = ...</b>, <b>AC = ...</b>. Tính <b>BC</b>.</p>
       <p><b>Lời giải:</b></p>
       <p>Áp dụng định lý Pythagore:</p>
-      <div class="formula-line">BC = √(AB² + AC²)</div>
+      <p>BC = √(AB² + AC²)</p>
       <p>Thay số vào ta được:</p>
-      <div class="formula-line">BC = ...</div>
+      <p>BC = ...</p>
       <p><b>Kết luận:</b> ...</p>
-    `
+    `,
   },
   {
     name: "Bài phương trình bậc hai",
     html: `
       <h2>Bài toán phương trình bậc hai</h2>
-      <p>Giải phương trình: <b>ax² + bx + c = 0</b>.</p>
+      <p>Giải phương trình: ax² + bx + c = 0.</p>
       <p><b>Lời giải:</b></p>
       <p>Ta có:</p>
-      <div class="formula-line">Δ = b² - 4ac</div>
+      <p>Δ = b² - 4ac</p>
       <p>Suy ra nghiệm:</p>
-      <div class="formula-line">x = (-b ± √Δ) / 2a</div>
-    `
+      <p>x = (-b ± √Δ) / 2a</p>
+    `,
   },
   {
     name: "Bài hình học chứng minh",
@@ -47,8 +51,7 @@ export const TEMPLATES = [
       <p><b>Kết luận:</b> ...</p>
       <p><b>Chứng minh:</b></p>
       <p>Ta có ...</p>
-      <div class="formula-line">...</div>
       <p>Vậy điều phải chứng minh là đúng.</p>
-    `
-  }
+    `,
+  },
 ];

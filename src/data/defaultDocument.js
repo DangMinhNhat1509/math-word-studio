@@ -5,9 +5,7 @@ export const DEFAULT_HTML = `
 
   <p><b>Lời giải:</b></p>
 
-  <p>Áp dụng định lý Pythagore trong tam giác vuông ABC:</p>
-
-  <p>
+  <p>Áp dụng định lý Pythagore trong tam giác vuông ABC:
     <span class="mws-formula" contenteditable="false">
       <math-field class="mws-math" smart-mode="on" data-latex="BC=\\sqrt{AB^{2}+AC^{2}}=\\sqrt{6^{2}+8^{2}}=\\sqrt{100}=10\\,\\mathrm{cm}">
         BC=\\sqrt{AB^{2}+AC^{2}}=\\sqrt{6^{2}+8^{2}}=\\sqrt{100}=10\\,\\mathrm{cm}
@@ -15,8 +13,7 @@ export const DEFAULT_HTML = `
     </span>
   </p>
 
-  <p>
-    Diện tích tam giác ABC là
+  <p>Diện tích tam giác ABC là
     <span class="mws-formula" contenteditable="false">
       <math-field class="mws-math" smart-mode="on" data-latex="S=\\frac{1}{2}\\cdot AB\\cdot AC=\\frac{1}{2}\\cdot 6\\cdot 8=24\\,\\mathrm{cm}^{2}">
         S=\\frac{1}{2}\\cdot AB\\cdot AC=\\frac{1}{2}\\cdot 6\\cdot 8=24\\,\\mathrm{cm}^{2}
@@ -31,7 +28,9 @@ export const DEFAULT_DIAGRAM = {
   a: "A",
   b: "B",
   c: "C",
-  ab: "6cm",
-  ac: "8cm",
-  bc: "BC = ?",
+  ab: "3cm",
+  ac: "4cm",
+  bc: "5cm",
+  customPoints: false,
+  points: null,
 };

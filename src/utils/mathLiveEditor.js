@@ -52,7 +52,6 @@ export function textToLatex(input = "") {
   let text = String(input || "").trim();
 
   if (!text) return "";
-
   if (QUICK_SYMBOL_LATEX[text]) return QUICK_SYMBOL_LATEX[text];
 
   text = normalizeSuperscripts(text);
@@ -121,6 +120,28 @@ function placeCaretAfter(node) {
   selection.addRange(range);
 }
 
+function placeCaretInside(node) {
+  const range = document.createRange();
+  const selection = window.getSelection();
+
+  range.selectNodeContents(node);
+  range.collapse(false);
+
+  selection.removeAllRanges();
+  selection.addRange(range);
+}
+
+function insertParagraphAfterMathField(field) {
+  const wrapper = field.closest(".mws-formula") || field;
+  const block = wrapper.closest("p, div, li") || wrapper;
+
+  const p = document.createElement("p");
+  p.innerHTML = "<br>";
+
+  block.after(p);
+  placeCaretInside(p);
+}
+
 function prepareOneMathField(field) {
   if (!field || field.dataset.ready === "1") return;
 
@@ -140,6 +161,7 @@ function prepareOneMathField(field) {
       try {
         field.value = latex;
         field.setValue?.(latex);
+        field.executeCommand?.("moveToMathfieldEnd");
       } catch {}
     });
   }
@@ -152,6 +174,12 @@ function prepareOneMathField(field) {
   });
 
   field.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      insertParagraphAfterMathField(field);
+      return;
+    }
+
     if (event.key === "Escape") {
       event.preventDefault();
       placeCaretAfter(field.closest(".mws-formula") || field);
@@ -180,11 +208,19 @@ function makeMathField(rawValue = "", focus = false) {
 
   requestAnimationFrame(() => {
     prepareOneMathField(field);
+
     try {
       field.value = latex;
       field.setValue?.(latex);
+      field.executeCommand?.("moveToMathfieldEnd");
     } catch {}
-    if (focus) field.focus();
+
+    if (focus) {
+      field.focus();
+      try {
+        field.executeCommand?.("moveToMathfieldEnd");
+      } catch {}
+    }
   });
 
   return wrapper;
@@ -202,6 +238,7 @@ function insertIntoMathField(field, value) {
   try {
     field.focus();
     field.executeCommand?.(["insert", latex]);
+    field.executeCommand?.("moveToMathfieldEnd");
   } catch {
     field.value = `${field.value || ""}${latex}`;
   }
@@ -217,7 +254,7 @@ function insertIntoMathField(field, value) {
 export function prepareEditorMath(editor) {
   if (!editor) return;
 
-  editor.querySelectorAll(".math-block").forEach((block) => {
+  editor.querySelectorAll(".math-block, .formula-line").forEach((block) => {
     const source =
       block.dataset.source ||
       block.querySelector(".math-source")?.textContent ||
@@ -226,6 +263,7 @@ export function prepareEditorMath(editor) {
 
     const formula = makeMathField(source, false);
     const space = document.createTextNode("\u00A0");
+
     block.replaceWith(formula, space);
   });
 
@@ -276,14 +314,18 @@ export function insertInlineMathField({
     range.collapse(false);
   }
 
-  const formula = makeMathField(value, true);
+  const shouldFocus = value.trim() === "";
+  const formula = makeMathField(value, shouldFocus);
   const space = document.createTextNode("\u00A0");
 
   range.deleteContents();
   range.insertNode(space);
   range.insertNode(formula);
 
-  placeCaretAfter(space);
+  if (!shouldFocus) {
+    placeCaretAfter(space);
+  }
+
   prepareEditorMath(editor);
   rememberSelection?.();
 
@@ -316,7 +358,7 @@ export function convertCurrentBlockToInlineMath(editor) {
   const source = (block.innerText || block.textContent || "").trim();
   if (!source) return false;
 
-  const formula = makeMathField(source, true);
+  const formula = makeMathField(source, false);
   const space = document.createTextNode("\u00A0");
 
   block.innerHTML = "";
