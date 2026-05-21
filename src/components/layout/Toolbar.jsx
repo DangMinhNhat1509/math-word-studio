@@ -3,6 +3,7 @@ import {
   AlignLeft,
   AlignRight,
   Bold,
+  BoxSelect,
   Crosshair,
   Grid3X3,
   Highlighter,
@@ -35,16 +36,11 @@ export default function Toolbar({
   onAlignCenter,
   onAlignRight,
   onMath,
+  onTextBox,
 }) {
   return (
     <div className="toolbar">
       <div className="tool-row">
-        <ToolButton
-          active={activeTool === "select"}
-          icon={MousePointer2}
-          label="Chọn"
-          onClick={() => setActiveTool("select")}
-        />
         <ToolButton
           active={activeTool === "text"}
           icon={Type}
@@ -56,6 +52,18 @@ export default function Toolbar({
           icon={Sigma}
           label="Công thức"
           onClick={onMath}
+        />
+        <ToolButton
+          active={activeTool === "select"}
+          icon={MousePointer2}
+          label="Chọn"
+          onClick={() => setActiveTool("select")}
+        />
+        <ToolButton
+          active={activeTool === "textbox"}
+          icon={BoxSelect}
+          label="Khung chữ"
+          onClick={onTextBox}
         />
         <ToolButton
           active={activeTool === "shape"}

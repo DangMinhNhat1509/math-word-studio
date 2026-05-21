@@ -3,7 +3,7 @@ import { useMemo, useRef, useState } from "react";
 const VIEWBOX = {
   width: 640,
   height: 360,
-  pad: 54,
+  pad: 46,
 };
 
 function parseLength(value, fallback) {
@@ -58,8 +58,8 @@ function computeTrianglePoints(diagram) {
   if (!isValidTriangle(ab, ac, bc)) {
     return fitPoints({
       a: { x: 0, y: 0 },
-      b: { x: 3, y: 0 },
-      c: { x: 0, y: -4 },
+      b: { x: 4, y: 0 },
+      c: { x: 0, y: -3 },
     });
   }
 
@@ -137,14 +137,16 @@ export default function TriangleDiagram({ diagram, setDiagram, showGrid, showAxi
   const svgRef = useRef(null);
   const [dragPoint, setDragPoint] = useState(null);
 
-  const points = useMemo(() => computeTrianglePoints(diagram), [diagram]);
-  const rightKey = rightAngleVertex(diagram);
+  const safeDiagram = diagram || {};
+  const points = useMemo(() => computeTrianglePoints(safeDiagram), [safeDiagram]);
+  const rightKey = rightAngleVertex(safeDiagram);
 
   function updatePointFromEvent(event, key) {
     const svg = svgRef.current;
     if (!svg) return;
 
     const rect = svg.getBoundingClientRect();
+
     const x = ((event.clientX - rect.left) / rect.width) * VIEWBOX.width;
     const y = ((event.clientY - rect.top) / rect.height) * VIEWBOX.height;
 
@@ -164,6 +166,7 @@ export default function TriangleDiagram({ diagram, setDiagram, showGrid, showAxi
   function startDrag(event, key) {
     event.preventDefault();
     event.stopPropagation();
+
     setDragPoint(key);
     updatePointFromEvent(event, key);
   }
@@ -185,69 +188,70 @@ export default function TriangleDiagram({ diagram, setDiagram, showGrid, showAxi
     }));
   }
 
-  const labelAB = diagram.ab || "AB";
-  const labelAC = diagram.ac || "AC";
-  const labelBC = diagram.bc || "BC";
+  const labelAB = safeDiagram.ab || "AB";
+  const labelAC = safeDiagram.ac || "AC";
+  const labelBC = safeDiagram.bc || "BC";
 
   return (
-    <div className="diagram-wrap">
-      <div className="diagram">
-        {showGrid && <div className="grid-layer" />}
-        {showAxis && (
-          <>
-            <div className="axis-x" />
-            <div className="axis-y" />
-            <span className="axis-label x">x</span>
-            <span className="axis-label y">y</span>
-          </>
-        )}
+    <div className="diagram">
+      {showGrid && <div className="grid-layer" />}
 
-        <svg
-          ref={svgRef}
-          className="diagram-svg"
-          viewBox={`0 0 ${VIEWBOX.width} ${VIEWBOX.height}`}
-          onPointerMove={handleMove}
-          onPointerUp={stopDrag}
-          onPointerLeave={stopDrag}
-        >
-          <polygon
-            points={`${points.a.x},${points.a.y} ${points.b.x},${points.b.y} ${points.c.x},${points.c.y}`}
-            className="triangle-fill"
-          />
+      {showAxis && (
+        <>
+          <div className="axis-x" />
+          <div className="axis-y" />
+          <span className="axis-label x">x</span>
+          <span className="axis-label y">y</span>
+        </>
+      )}
 
-          <line className="triangle-edge" x1={points.a.x} y1={points.a.y} x2={points.b.x} y2={points.b.y} />
-          <line className="triangle-edge" x1={points.a.x} y1={points.a.y} x2={points.c.x} y2={points.c.y} />
-          <line className="triangle-edge" x1={points.b.x} y1={points.b.y} x2={points.c.x} y2={points.c.y} />
+      <svg
+        ref={svgRef}
+        className="diagram-svg"
+        viewBox={`0 0 ${VIEWBOX.width} ${VIEWBOX.height}`}
+        onPointerMove={handleMove}
+        onPointerUp={stopDrag}
+        onPointerLeave={stopDrag}
+      >
+        <polygon
+          points={`${points.a.x},${points.a.y} ${points.b.x},${points.b.y} ${points.c.x},${points.c.y}`}
+          className="triangle-fill"
+        />
 
-          {rightKey && <path className="right-angle-mark" d={rightAnglePath(points, rightKey)} />}
+        <line className="triangle-edge" x1={points.a.x} y1={points.a.y} x2={points.b.x} y2={points.b.y} />
+        <line className="triangle-edge" x1={points.a.x} y1={points.a.y} x2={points.c.x} y2={points.c.y} />
+        <line className="triangle-edge" x1={points.b.x} y1={points.b.y} x2={points.c.x} y2={points.c.y} />
 
-          <text className="side-label" x={midpoint(points.a, points.b, 26).x} y={midpoint(points.a, points.b, 26).y}>{labelAB}</text>
-          <text className="side-label" x={midpoint(points.a, points.c, -8).x} y={midpoint(points.a, points.c, -8).y}>{labelAC}</text>
-          <text className="side-label" x={midpoint(points.b, points.c, -8).x} y={midpoint(points.b, points.c, -8).y}>{labelBC}</text>
+        {rightKey && <path className="right-angle-mark" d={rightAnglePath(points, rightKey)} />}
 
-          {["a", "b", "c"].map((key) => (
-            <g
-              key={key}
-              className="point-group"
-              onPointerDown={(event) => startDrag(event, key)}
-            >
-              <circle className="point-hit" cx={points[key].x} cy={points[key].y} r="18" />
-              <circle className="point-dot" cx={points[key].x} cy={points[key].y} r="6" />
-              <text className="point-label" x={points[key].x + 10} y={points[key].y - 10}>
-                {diagram[key] || key.toUpperCase()}
-              </text>
-            </g>
-          ))}
-        </svg>
+        <text className="side-label" x={midpoint(points.a, points.b, 22).x} y={midpoint(points.a, points.b, 22).y}>
+          {labelAB}
+        </text>
+        <text className="side-label" x={midpoint(points.a, points.c, -8).x} y={midpoint(points.a, points.c, -8).y}>
+          {labelAC}
+        </text>
+        <text className="side-label" x={midpoint(points.b, points.c, -8).x} y={midpoint(points.b, points.c, -8).y}>
+          {labelBC}
+        </text>
 
-        <button type="button" className="diagram-reset" onClick={resetToScale}>
-          Về đúng tỉ lệ cạnh
-        </button>
-      </div>
+        {["a", "b", "c"].map((key) => (
+          <g
+            key={key}
+            className="point-group"
+            onPointerDown={(event) => startDrag(event, key)}
+          >
+            <circle className="point-hit" cx={points[key].x} cy={points[key].y} r="18" />
+            <circle className="point-dot" cx={points[key].x} cy={points[key].y} r="6" />
+            <text className="point-label" x={points[key].x + 10} y={points[key].y - 10}>
+              {safeDiagram[key] || key.toUpperCase()}
+            </text>
+          </g>
+        ))}
+      </svg>
 
-      <div className="diagram-caption">
-        Kéo các điểm A, B, C để chỉnh hình. Nhập AB, AC, BC ở sidebar phải, rồi bấm “Về đúng tỉ lệ cạnh” để dựng lại theo tỉ lệ.
-      </div>
+      <button type="button" className="diagram-reset" onClick={resetToScale}>
+        Về tỉ lệ cạnh
+      </button>
     </div>
   );
 }

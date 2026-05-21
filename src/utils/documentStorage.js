@@ -1,49 +1,87 @@
 import { DEFAULT_DIAGRAM, DEFAULT_HTML } from "../data/defaultDocument";
-import { prepareEditorMath, syncMathFields } from "./mathLiveEditor";
 
-export function loadDocument({ editorRef, setDiagram, setSavedAt }) {
-  const savedHtml = localStorage.getItem("mws_document_html");
-  const savedDiagram = localStorage.getItem("mws_diagram");
-  const savedTime = localStorage.getItem("mws_saved_at");
+const PAGES_KEY = "mws_pages_v3";
+const SAVED_AT_KEY = "mws_saved_at";
 
-  if (editorRef.current) {
-    editorRef.current.innerHTML = savedHtml || DEFAULT_HTML;
-    prepareEditorMath(editorRef.current);
+function makeId() {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
   }
 
-  if (savedDiagram) {
+  return `page-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+export function createBlankPage(index = 1, html = "<p><br></p>") {
+  return {
+    id: makeId(),
+    title: `Trang ${index}`,
+    html,
+    diagram: {
+      ...DEFAULT_DIAGRAM,
+    },
+    diagramBox: {
+      x: 72,
+      y: 610,
+      width: 640,
+      height: 320,
+    },
+  };
+}
+
+export function getInitialPages() {
+  try {
+    const rawPages = localStorage.getItem(PAGES_KEY);
+    const parsedPages = rawPages ? JSON.parse(rawPages) : null;
+
+    if (Array.isArray(parsedPages) && parsedPages.length > 0) {
+      return parsedPages;
+    }
+  } catch {
+    // fallback below
+  }
+
+  const oldHtml = localStorage.getItem("mws_document_html");
+  const oldDiagram = localStorage.getItem("mws_diagram");
+
+  let diagram = { ...DEFAULT_DIAGRAM };
+
+  if (oldDiagram) {
     try {
-      setDiagram(JSON.parse(savedDiagram));
+      diagram = {
+        ...DEFAULT_DIAGRAM,
+        ...JSON.parse(oldDiagram),
+      };
     } catch {
-      setDiagram(DEFAULT_DIAGRAM);
+      diagram = { ...DEFAULT_DIAGRAM };
     }
   }
 
-  if (savedTime) setSavedAt(savedTime);
+  return [
+    {
+      ...createBlankPage(1, oldHtml || DEFAULT_HTML),
+      title: "Trang 1",
+      diagram,
+    },
+  ];
 }
 
-export function saveDocumentToBrowser({ editorRef, diagram, setSavedAt, setStatus }) {
+export function getSavedAt() {
+  return localStorage.getItem(SAVED_AT_KEY) || "";
+}
+
+export function savePagesToBrowser({ pages, setSavedAt, setStatus }) {
   const now = new Date().toLocaleString("vi-VN");
 
-  syncMathFields(editorRef.current);
-
-  localStorage.setItem("mws_document_html", editorRef.current?.innerHTML || "");
-  localStorage.setItem("mws_diagram", JSON.stringify(diagram));
-  localStorage.setItem("mws_saved_at", now);
+  localStorage.setItem(PAGES_KEY, JSON.stringify(pages));
+  localStorage.setItem(SAVED_AT_KEY, now);
 
   setSavedAt(now);
-  setStatus("Đã lưu vào trình duyệt");
+  setStatus("Đã lưu tài liệu");
 }
 
-export function resetDocument({ editorRef, setSavedAt, setStatus }) {
-  if (!confirm("Reset về mẫu ban đầu?")) return;
-
-  editorRef.current.innerHTML = DEFAULT_HTML;
-  prepareEditorMath(editorRef.current);
-
+export function resetPagesInBrowser() {
+  localStorage.removeItem(PAGES_KEY);
   localStorage.removeItem("mws_document_html");
-  localStorage.removeItem("mws_saved_at");
-
-  setSavedAt("");
-  setStatus("Đã reset mẫu");
+  localStorage.removeItem("mws_diagram");
+  localStorage.removeItem(SAVED_AT_KEY);
 }

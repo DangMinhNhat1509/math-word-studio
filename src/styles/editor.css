@@ -1,125 +1,200 @@
 .workspace {
-  padding: 26px;
-  background:
-    radial-gradient(circle at 12% 10%, rgba(148, 163, 184, 0.22), transparent 26%),
-    var(--bg);
-  min-height: calc(100vh - 180px);
+  padding: 24px 28px 80px;
+  background: #e9edf3;
+  min-height: calc(100vh - 160px);
+}
+
+.page-toolbar {
+  width: 794px;
+  margin: 0 auto 10px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 750;
 }
 
 .paper {
   width: 794px;
-  min-height: 1120px;
+  min-height: 1123px;
   margin: 0 auto 80px;
+  padding: 72px 70px;
   background: white;
-  border-radius: 30px;
-  padding: 56px;
-  box-shadow: var(--shadow);
-}
-
-.paper-head {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  padding-bottom: 18px;
-  margin-bottom: 18px;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.kicker {
-  color: var(--muted2);
-  text-transform: uppercase;
-  font-size: 12px;
-  letter-spacing: 0.28em;
-  font-weight: 900;
-}
-
-.paper h1 {
-  margin: 8px 0 0;
-  font-size: 32px;
-  letter-spacing: -0.04em;
-}
-
-.paper-meta {
-  align-self: flex-start;
-  border: 1px solid var(--line);
-  color: var(--muted);
-  border-radius: 16px;
-  padding: 9px 12px;
-  font-size: 14px;
-  font-weight: 800;
-}
-
-.edit-hint {
-  margin-bottom: 14px;
-  border: 1px dashed var(--line2);
-  background: var(--soft);
-  border-radius: 16px;
-  color: var(--muted);
-  padding: 10px 12px;
-  font-size: 13px;
-  font-weight: 750;
+  border-radius: 2px;
+  border: 1px solid #d9dee7;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
+  position: relative;
+  overflow: hidden;
 }
 
 .editor {
-  min-height: 430px;
+  min-height: 970px;
   outline: none;
-  font-size: 17px;
-  line-height: 1.78;
-  padding: 18px;
-  border: 1px solid var(--line);
-  border-radius: 22px;
-  background: white;
+  font-size: 16px;
+  line-height: 1.72;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  position: relative;
+  z-index: 2;
 }
 
 .editor:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.07);
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.editor h1,
+.editor h2,
+.editor h3 {
+  margin: 0 0 12px;
+  line-height: 1.25;
 }
 
 .editor h2 {
   font-size: 24px;
-  margin: 0 0 12px;
 }
 
 .editor p {
-  margin: 0 0 14px;
+  margin: 0 0 13px;
 }
 
-.formula-line {
-  margin: 12px 0 16px;
-  padding: 14px 16px;
-  border-radius: 18px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  text-align: center;
-  font-size: 22px;
-  font-weight: 850;
-  line-height: 1.4;
+.editor b,
+.editor strong {
+  font-weight: 800;
+}
+
+.formula-line,
+.editor .formula-line,
+.editor .math-block {
+  display: inline !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  text-align: left !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  line-height: inherit !important;
 }
 
 .math-symbol {
   display: inline-flex;
-  padding: 0 4px;
+  padding: 0 2px;
   font-weight: 900;
   color: #0f172a;
 }
 
 .highlight {
-  border-radius: 8px;
-  padding: 1px 6px;
+  border-radius: 4px;
+  padding: 1px 4px;
   background: var(--amberSoft);
   color: var(--amber);
   font-weight: 900;
 }
 
+.word-textbox {
+  display: inline-block;
+  min-width: 180px;
+  min-height: 54px;
+  max-width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #64748b;
+  background: white;
+  resize: both;
+  overflow: auto;
+  vertical-align: top;
+}
+
 .paper-note {
+  display: none;
+}
+
+.figure-box {
+  position: absolute;
+  z-index: 4;
+  background: transparent;
+  border: 1px dashed transparent;
+}
+
+.figure-box:hover {
+  border-color: #94a3b8;
+}
+
+.figure-toolbar {
+  position: absolute;
+  left: 0;
+  top: -28px;
+  height: 26px;
+  padding: 0 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px 6px 0 0;
+  background: white;
   display: flex;
   align-items: center;
-  gap: 9px;
-  color: #166534;
-  background: #f0fdf4;
-  border-radius: 18px;
-  padding: 12px 14px;
-  font-size: 14px;
-  font-weight: 750;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #334155;
+  cursor: move;
+  opacity: 0;
+  transition: 0.12s ease;
+}
+
+.figure-toolbar small {
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+.figure-box:hover .figure-toolbar {
+  opacity: 1;
+}
+
+.figure-content {
+  width: 100%;
+  height: 100%;
+}
+
+.figure-resize {
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  width: 12px;
+  height: 12px;
+  border-right: 2px solid #64748b;
+  border-bottom: 2px solid #64748b;
+  cursor: nwse-resize;
+  opacity: 0;
+}
+
+.figure-box:hover .figure-resize {
+  opacity: 1;
+}
+
+@media print {
+  .workspace {
+    padding: 0;
+    background: white;
+  }
+
+  .page-toolbar,
+  .figure-toolbar,
+  .figure-resize {
+    display: none !important;
+  }
+
+  .paper {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0;
+    padding: 18mm;
+    border: 0;
+    box-shadow: none;
+    border-radius: 0;
+    page-break-after: always;
+  }
 }
