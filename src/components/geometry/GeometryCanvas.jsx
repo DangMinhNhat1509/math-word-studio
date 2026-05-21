@@ -5,10 +5,10 @@ import {
   createSegment,
   createStroke,
   deleteObjectAndDependents,
+  distance,
   GEOMETRY_SIZE,
   getPoint,
   nextPointLabel,
-  distance,
 } from "../../utils/figures";
 
 function midpoint(a, b) {
@@ -150,6 +150,7 @@ export default function GeometryCanvas({
     dragRef.current = {
       mode: "pen",
       strokeId: stroke.id,
+      points: [p],
     };
 
     updateObjects([...objects, stroke], {
@@ -283,13 +284,14 @@ export default function GeometryCanvas({
 
       if (drag.mode === "pen") {
         const p = getSvgPoint(event);
+        drag.points = [...(drag.points || []), p];
 
         updateObjects(
           objects.map((object) =>
             object.id === drag.strokeId && object.type === "stroke"
               ? {
                   ...object,
-                  points: [...(object.points || []), p],
+                  points: drag.points,
                 }
               : object
           )
@@ -298,8 +300,9 @@ export default function GeometryCanvas({
         return;
       }
 
-      const dx = ((event.clientX - drag.startX) / (svgRef.current?.getBoundingClientRect().width || 1)) * GEOMETRY_SIZE.W;
-      const dy = ((event.clientY - drag.startY) / (svgRef.current?.getBoundingClientRect().height || 1)) * GEOMETRY_SIZE.H;
+      const rect = svgRef.current?.getBoundingClientRect();
+      const dx = ((event.clientX - drag.startX) / (rect?.width || 1)) * GEOMETRY_SIZE.W;
+      const dy = ((event.clientY - drag.startY) / (rect?.height || 1)) * GEOMETRY_SIZE.H;
 
       if (drag.mode === "point") {
         updateObject(drag.id, {
@@ -457,7 +460,7 @@ export default function GeometryCanvas({
 
       {objects.length === 0 && (
         <div className="empty-geometry">
-          Khung trống. Chọn <b>Điểm</b>, <b>Đoạn</b>, <b>Tròn</b>, <b>Vẽ tay</b> hoặc <b>Tam giác mẫu</b> ở sidebar.
+          Khung trống. Chọn <b>Điểm</b>, <b>Đoạn</b>, <b>Tròn</b>, <b>Vẽ tay</b> hoặc <b>Tam giác mẫu</b>.
         </div>
       )}
 

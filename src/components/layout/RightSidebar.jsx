@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Braces,
   Circle,
@@ -14,11 +15,10 @@ import {
 import {
   createCircle,
   createPoint,
+  createRightAngle,
   createSegment,
   createTrianglePreset,
-  createRightAngle,
   deleteObjectAndDependents,
-  getPoint,
   measureSegment,
   nextPointLabel,
   objectLabel,
@@ -43,25 +43,18 @@ export default function RightSidebar({
   onUpdateFigure,
   onDeleteFigure,
   onDeselectFigure,
+  onClearFigure,
   onInsertSymbol,
   onInsertFormula,
   onInsertTemplate,
 }) {
+  const [geometryTab, setGeometryTab] = useState("tools");
+
   const objects = activeFigure?.objects || [];
   const selectedObject = objects.find((object) => object.id === activeFigure?.selectedObjectId);
 
   function keepCaret(event) {
     event.preventDefault();
-  }
-
-  function setTool(tool) {
-    if (!activeFigure) return;
-
-    onUpdateFigure(activeFigure.id, {
-      ...activeFigure,
-      tool,
-      pendingPointId: null,
-    });
   }
 
   function patchFigure(patch) {
@@ -70,6 +63,13 @@ export default function RightSidebar({
     onUpdateFigure(activeFigure.id, {
       ...activeFigure,
       ...patch,
+    });
+  }
+
+  function setTool(tool) {
+    patchFigure({
+      tool,
+      pendingPointId: null,
     });
   }
 
@@ -115,6 +115,8 @@ export default function RightSidebar({
       selectedObjectId: point.id,
       tool: "select",
     });
+
+    setGeometryTab("props");
   }
 
   function addSegmentQuick() {
@@ -131,6 +133,8 @@ export default function RightSidebar({
       selectedObjectId: segment.id,
       tool: "select",
     });
+
+    setGeometryTab("props");
   }
 
   function addCircleQuick() {
@@ -147,6 +151,8 @@ export default function RightSidebar({
       selectedObjectId: circle.id,
       tool: "select",
     });
+
+    setGeometryTab("props");
   }
 
   function addRightAngleQuick() {
@@ -168,6 +174,8 @@ export default function RightSidebar({
       selectedObjectId: right.id,
       tool: "select",
     });
+
+    setGeometryTab("props");
   }
 
   function deleteSelectedObject() {
@@ -181,17 +189,6 @@ export default function RightSidebar({
     });
   }
 
-  function clearFigure() {
-    if (!activeFigure) return;
-
-    onUpdateFigure(activeFigure.id, {
-      ...activeFigure,
-      objects: [],
-      selectedObjectId: null,
-      pendingPointId: null,
-    });
-  }
-
   function selectObject(objectId) {
     if (!activeFigure) return;
 
@@ -200,6 +197,8 @@ export default function RightSidebar({
       selectedObjectId: objectId,
       pendingPointId: null,
     });
+
+    setGeometryTab("props");
   }
 
   if (activeFigure) {
@@ -217,126 +216,156 @@ export default function RightSidebar({
           <input value={activeFigure.title || ""} onChange={(event) => updateFigureTitle(event.target.value)} />
         </label>
 
-        <div className="figure-list compact-list">
-          {(figures || []).map((figure, index) => (
-            <button
-              type="button"
-              key={figure.id}
-              className={`figure-item ${activeFigure?.id === figure.id ? "active" : ""}`}
-              onClick={() => onSelectFigure(figure.id)}
-            >
-              <Triangle size={15} />
-              {figure.title || `Hình ${index + 1}`}
-            </button>
-          ))}
-        </div>
-
-        <div className="geometry-tools">
-          <button className={activeFigure.tool === "select" ? "active" : ""} onClick={() => setTool("select")}>
-            <MousePointer2 size={15} /> Chọn
+        <div className="geometry-tabs">
+          <button type="button" className={geometryTab === "tools" ? "active" : ""} onClick={() => setGeometryTab("tools")}>
+            Công cụ
           </button>
-          <button className={activeFigure.tool === "point" ? "active" : ""} onClick={() => setTool("point")}>
-            <Circle size={15} /> Điểm
+          <button type="button" className={geometryTab === "objects" ? "active" : ""} onClick={() => setGeometryTab("objects")}>
+            Đối tượng
           </button>
-          <button className={activeFigure.tool === "segment" ? "active" : ""} onClick={() => setTool("segment")}>
-            <PenLine size={15} /> Đoạn
-          </button>
-          <button className={activeFigure.tool === "circle" ? "active" : ""} onClick={() => setTool("circle")}>
-            <Circle size={15} /> Tròn
-          </button>
-          <button className={activeFigure.tool === "pen" ? "active" : ""} onClick={() => setTool("pen")}>
-            <PenLine size={15} /> Vẽ tay
+          <button type="button" className={geometryTab === "props" ? "active" : ""} onClick={() => setGeometryTab("props")}>
+            Thuộc tính
           </button>
         </div>
 
-        <div className="geometry-actions">
-          <button type="button" onClick={addPointQuick}>+ Điểm nhanh</button>
-          <button type="button" onClick={addSegmentQuick}>+ Nối 2 điểm cuối</button>
-          <button type="button" onClick={addCircleQuick}>+ Tròn 2 điểm cuối</button>
-          <button type="button" onClick={addRightAngleQuick}>+ Ký hiệu góc vuông</button>
-          <button type="button" onClick={addTrianglePreset}>+ Tam giác 3-4-5</button>
-        </div>
+        {geometryTab === "tools" && (
+          <>
+            <div className="geometry-tools">
+              <button className={activeFigure.tool === "select" ? "active" : ""} onClick={() => setTool("select")}>
+                <MousePointer2 size={15} /> Chọn
+              </button>
+              <button className={activeFigure.tool === "point" ? "active" : ""} onClick={() => setTool("point")}>
+                <Circle size={15} /> Điểm
+              </button>
+              <button className={activeFigure.tool === "segment" ? "active" : ""} onClick={() => setTool("segment")}>
+                <PenLine size={15} /> Đoạn
+              </button>
+              <button className={activeFigure.tool === "circle" ? "active" : ""} onClick={() => setTool("circle")}>
+                <Circle size={15} /> Tròn
+              </button>
+              <button className={activeFigure.tool === "pen" ? "active" : ""} onClick={() => setTool("pen")}>
+                <PenLine size={15} /> Vẽ tay
+              </button>
+            </div>
 
-        <div className="geometry-display-options">
-          <button
-            type="button"
-            className={activeFigure.showGrid ? "active" : ""}
-            onClick={() => patchFigure({ showGrid: !activeFigure.showGrid })}
-          >
-            <Grid3X3 size={15} />
-            Lưới hình này
-          </button>
-          <button
-            type="button"
-            className={activeFigure.showAxis ? "active" : ""}
-            onClick={() => patchFigure({ showAxis: !activeFigure.showAxis })}
-          >
-            Trục hình này
-          </button>
-        </div>
+            <div className="geometry-actions">
+              <button type="button" onClick={addPointQuick}>+ Điểm nhanh</button>
+              <button type="button" onClick={addSegmentQuick}>+ Nối 2 điểm cuối</button>
+              <button type="button" onClick={addCircleQuick}>+ Tròn 2 điểm cuối</button>
+              <button type="button" onClick={addRightAngleQuick}>+ Ký hiệu góc vuông</button>
+              <button type="button" onClick={addTrianglePreset}>+ Tam giác 3-4-5</button>
+            </div>
 
-        <div className="object-panel">
-          <b>Đối tượng trong hình</b>
-
-          {objects.length === 0 && (
-            <p>Khung đang trống. Chọn công cụ rồi vẽ vào khung.</p>
-          )}
-
-          <div className="object-list">
-            {objects.map((object) => (
+            <div className="geometry-display-options">
               <button
                 type="button"
-                key={object.id}
-                className={`object-item ${object.id === activeFigure.selectedObjectId ? "active" : ""}`}
-                onClick={() => selectObject(object.id)}
+                className={activeFigure.showGrid ? "active" : ""}
+                onClick={() => patchFigure({ showGrid: !activeFigure.showGrid })}
               >
-                <span>{objectKindName(object.type)}</span>
-                <small>{objectLabel(objects, object)}</small>
+                <Grid3X3 size={15} />
+                Lưới hình này
               </button>
-            ))}
-          </div>
-        </div>
+              <button
+                type="button"
+                className={activeFigure.showAxis ? "active" : ""}
+                onClick={() => patchFigure({ showAxis: !activeFigure.showAxis })}
+              >
+                Trục hình này
+              </button>
+            </div>
+          </>
+        )}
 
-        {selectedObject && (
-          <div className="selected-object-card">
-            <b>Đang chọn: {objectLabel(objects, selectedObject)}</b>
+        {geometryTab === "objects" && (
+          <>
+            <div className="figure-list compact-list">
+              {(figures || []).map((figure, index) => (
+                <button
+                  type="button"
+                  key={figure.id}
+                  className={`figure-item ${activeFigure?.id === figure.id ? "active" : ""}`}
+                  onClick={() => onSelectFigure(figure.id)}
+                >
+                  <Triangle size={15} />
+                  {figure.title || `Hình ${index + 1}`}
+                </button>
+              ))}
+            </div>
 
-            {selectedObject.type === "point" && (
-              <label className="field-label">
-                Tên điểm
-                <input value={selectedObject.label || ""} onChange={(event) => updateSelectedObject({ label: event.target.value })} />
-              </label>
+            <div className="object-panel">
+              <b>Đối tượng trong hình</b>
+
+              {objects.length === 0 && (
+                <p>Khung đang trống. Chọn công cụ rồi vẽ vào khung.</p>
+              )}
+
+              <div className="object-list">
+                {objects.map((object) => (
+                  <button
+                    type="button"
+                    key={object.id}
+                    className={`object-item ${object.id === activeFigure.selectedObjectId ? "active" : ""}`}
+                    onClick={() => selectObject(object.id)}
+                  >
+                    <span>{objectKindName(object.type)}</span>
+                    <small>{objectLabel(objects, object)}</small>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
+        {geometryTab === "props" && (
+          <>
+            {!selectedObject && (
+              <div className="empty-panel">
+                Chọn một điểm, đoạn, đường tròn hoặc nét vẽ để sửa thuộc tính.
+              </div>
             )}
 
-            {selectedObject.type === "segment" && (
-              <>
-                <label className="field-label">
-                  Độ dài/nhãn hiển thị trên cạnh
-                  <input
-                    value={selectedObject.label || ""}
-                    placeholder="VD: 3cm, x, AB = 5"
-                    onChange={(event) => updateSelectedObject({ label: event.target.value })}
-                  />
-                </label>
+            {selectedObject && (
+              <div className="selected-object-card">
+                <b>Đang chọn: {objectLabel(objects, selectedObject)}</b>
 
-                <div className="measure-note">
-                  Độ dài theo hình: {measureSegment(objects, selectedObject).toFixed(1)} px
-                </div>
-              </>
+                {selectedObject.type === "point" && (
+                  <label className="field-label">
+                    Tên điểm
+                    <input value={selectedObject.label || ""} onChange={(event) => updateSelectedObject({ label: event.target.value })} />
+                  </label>
+                )}
+
+                {selectedObject.type === "segment" && (
+                  <>
+                    <label className="field-label">
+                      Độ dài/nhãn trên cạnh
+                      <input
+                        value={selectedObject.label || ""}
+                        placeholder="VD: 3cm, x, AB = 5"
+                        onChange={(event) => updateSelectedObject({ label: event.target.value })}
+                      />
+                    </label>
+
+                    <div className="measure-note">
+                      Độ dài theo hình: {measureSegment(objects, selectedObject).toFixed(1)} px
+                    </div>
+                  </>
+                )}
+
+                {selectedObject.type === "circle" && (
+                  <label className="field-label">
+                    Nhãn đường tròn
+                    <input value={selectedObject.label || ""} onChange={(event) => updateSelectedObject({ label: event.target.value })} />
+                  </label>
+                )}
+
+                <button type="button" className="danger-action" onClick={deleteSelectedObject}>
+                  <Trash2 size={15} />
+                  Xóa đối tượng đang chọn
+                </button>
+              </div>
             )}
-
-            {selectedObject.type === "circle" && (
-              <label className="field-label">
-                Nhãn đường tròn
-                <input value={selectedObject.label || ""} onChange={(event) => updateSelectedObject({ label: event.target.value })} />
-              </label>
-            )}
-
-            <button type="button" className="danger-action" onClick={deleteSelectedObject}>
-              <Trash2 size={15} />
-              Xóa đối tượng đang chọn
-            </button>
-          </div>
+          </>
         )}
 
         <button type="button" className="danger-action" onClick={() => onDeleteFigure(activeFigure.id)}>
@@ -344,7 +373,7 @@ export default function RightSidebar({
           Xóa cả khung hình
         </button>
 
-        <button type="button" className="soft-action" onClick={clearFigure}>
+        <button type="button" className="soft-action" onClick={onClearFigure}>
           <Eraser size={15} />
           Xóa hết trong khung
         </button>

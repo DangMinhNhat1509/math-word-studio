@@ -73,12 +73,12 @@ export function createTrianglePreset() {
   ];
 }
 
-export function createFigure(index = 1) {
+export function createFigure(index = 1, tool = "select") {
   return {
     id: uid("fig"),
     type: "geometry",
     title: `Hình ${index}`,
-    tool: "select",
+    tool,
     selectedObjectId: null,
     pendingPointId: null,
     showGrid: true,
@@ -110,29 +110,30 @@ function triangleDiagramToObjects(diagram = {}) {
 }
 
 export function ensureFigureGeometry(figure, index = 1) {
-  if (!figure) return createFigure(index);
+  const fallback = createFigure(index);
+
+  if (!figure) return fallback;
 
   if (figure.type === "geometry" && Array.isArray(figure.objects)) {
     return {
-      ...createFigure(index),
+      ...fallback,
       ...figure,
       showGrid: typeof figure.showGrid === "boolean" ? figure.showGrid : true,
       showAxis: typeof figure.showAxis === "boolean" ? figure.showAxis : false,
       objects: figure.objects,
+      box: figure.box || fallback.box,
     };
   }
 
-  const converted = createFigure(index);
-
   return {
-    ...converted,
+    ...fallback,
     ...figure,
     type: "geometry",
     objects: triangleDiagramToObjects(figure.diagram),
+    box: figure.box || figure.diagramBox || fallback.box,
     tool: "select",
     selectedObjectId: null,
     pendingPointId: null,
-    box: figure.box || figure.diagramBox || converted.box,
   };
 }
 
@@ -143,6 +144,7 @@ export function ensurePageFigures(page) {
     return {
       ...page,
       figures: page.figures.map((figure, index) => ensureFigureGeometry(figure, index + 1)),
+      selectedFigureId: page.selectedFigureId || null,
     };
   }
 
@@ -203,7 +205,9 @@ export function deleteObjectAndDependents(objects = [], objectId) {
     if (target.type === "point") {
       if (object.type === "segment") return object.from !== objectId && object.to !== objectId;
       if (object.type === "circle") return object.center !== objectId && object.through !== objectId;
-      if (object.type === "rightAngle") return object.at !== objectId && object.p1 !== objectId && object.p2 !== objectId;
+      if (object.type === "rightAngle") {
+        return object.at !== objectId && object.p1 !== objectId && object.p2 !== objectId;
+      }
     }
 
     return true;
@@ -214,11 +218,13 @@ export function objectLabel(objects = [], object) {
   if (!object) return "Đối tượng";
 
   if (object.type === "point") return `Điểm ${object.label || ""}`;
+
   if (object.type === "segment") {
     const a = getPoint(objects, object.from);
     const b = getPoint(objects, object.to);
     return `Đoạn ${a?.label || "?"}${b?.label || "?"}${object.label ? ` = ${object.label}` : ""}`;
   }
+
   if (object.type === "circle") return `Đường tròn${object.label ? ` ${object.label}` : ""}`;
   if (object.type === "rightAngle") return "Ký hiệu góc vuông";
   if (object.type === "stroke") return "Nét vẽ tay";

@@ -23,14 +23,3 @@ export const DEFAULT_HTML = `
 
   <p><b>Kết luận:</b> BC = 10cm và S = 24cm².</p>
 `;
-
-export const DEFAULT_DIAGRAM = {
-  a: "A",
-  b: "B",
-  c: "C",
-  ab: "3cm",
-  ac: "4cm",
-  bc: "5cm",
-  customPoints: false,
-  points: null,
-};

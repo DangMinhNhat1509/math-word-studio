@@ -4,7 +4,7 @@ import {
   AlignRight,
   Bold,
   BoxSelect,
-  BrushCleaning,
+  Eraser,
   Highlighter,
   Italic,
   MousePointer2,
@@ -60,10 +60,12 @@ export default function Toolbar({
         <span className="divider" />
 
         <IconButton title="Thêm khung hình mới" onClick={onAddFigure}>
-          <Plus size={17} /> Hình
+          <Plus size={17} />
+          Hình
         </IconButton>
         <IconButton title="Dọn format nội dung đang soạn" onClick={onCleanFormat}>
-          <BrushCleaning size={17} /> Dọn format
+          <Eraser size={17} />
+          Dọn format
         </IconButton>
       </div>
     </div>

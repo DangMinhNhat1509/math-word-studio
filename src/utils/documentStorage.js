@@ -1,7 +1,7 @@
 import { DEFAULT_HTML } from "../data/defaultDocument";
 import { ensurePageFigures } from "./figures";
 
-const PAGES_KEY = "mws_pages_v7";
+const PAGES_KEY = "mws_pages_refactor_v1";
 const SAVED_AT_KEY = "mws_saved_at";
 
 function makeId() {
@@ -20,7 +20,14 @@ export function createBlankPage(index = 1, html = "<p><br></p>") {
 }
 
 export function getInitialPages() {
-  const keys = ["mws_pages_v7", "mws_pages_v6", "mws_pages_v5", "mws_pages_v4", "mws_pages_v3"];
+  const keys = [
+    "mws_pages_refactor_v1",
+    "mws_pages_v7",
+    "mws_pages_v6",
+    "mws_pages_v5",
+    "mws_pages_v4",
+    "mws_pages_v3",
+  ];
 
   for (const key of keys) {
     try {
@@ -30,7 +37,9 @@ export function getInitialPages() {
       if (Array.isArray(parsedPages) && parsedPages.length > 0) {
         return parsedPages.map(ensurePageFigures);
       }
-    } catch {}
+    } catch {
+      // continue
+    }
   }
 
   const oldHtml = localStorage.getItem("mws_document_html");
@@ -56,9 +65,14 @@ export function savePagesToBrowser({ pages, setSavedAt, setStatus }) {
 }
 
 export function resetPagesInBrowser() {
-  ["mws_pages_v7", "mws_pages_v6", "mws_pages_v5", "mws_pages_v4", "mws_pages_v3"].forEach((key) =>
-    localStorage.removeItem(key)
-  );
+  [
+    "mws_pages_refactor_v1",
+    "mws_pages_v7",
+    "mws_pages_v6",
+    "mws_pages_v5",
+    "mws_pages_v4",
+    "mws_pages_v3",
+  ].forEach((key) => localStorage.removeItem(key));
 
   localStorage.removeItem("mws_document_html");
   localStorage.removeItem("mws_diagram");

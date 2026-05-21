@@ -2,6 +2,9 @@ import React, { useRef, useState } from "react";
 
 import { SYMBOLS, FORMULAS, TEMPLATES } from "./data/mathData";
 import { useEditorSelection } from "./hooks/useEditorSelection";
+import { useDocumentPages } from "./hooks/useDocumentPages";
+import { useGeometryEditor } from "./hooks/useGeometryEditor";
+import { getSavedAt } from "./utils/documentStorage";
 
 import {
   copyHtml,
@@ -11,16 +14,7 @@ import {
   runCommand,
 } from "./utils/editorCommands";
 
-import {
-  createBlankPage,
-  getInitialPages,
-  getSavedAt,
-  resetPagesInBrowser,
-  savePagesToBrowser,
-} from "./utils/documentStorage";
-
-import { createFigure, ensurePageFigures } from "./utils/figures";
-import { insertInlineMathField, syncMathFields } from "./utils/mathLiveEditor";
+import { insertInlineMathField } from "./utils/mathLiveEditor";
 import { cleanEditorFormat } from "./utils/pasteCleaner";
 
 import Topbar from "./components/layout/Topbar";
@@ -33,109 +27,52 @@ export default function App() {
   const editorRef = useRef(null);
   const { rememberSelection, restoreSelection } = useEditorSelection(editorRef);
 
-  const [doc, setDoc] = useState(() => {
-    const pages = getInitialPages().map(ensurePageFigures);
-
-    return {
-      pages,
-      currentPageId: pages[0]?.id || "",
-    };
-  });
-
   const [activeTool, setActiveTool] = useState("text");
   const [status, setStatus] = useState("Đã sẵn sàng");
   const [savedAt, setSavedAt] = useState(() => getSavedAt());
 
-  const pages = doc.pages.map(ensurePageFigures);
-  const currentPageId = doc.currentPageId;
-  const activePageIndex = Math.max(0, pages.findIndex((page) => page.id === currentPageId));
-  const activePage = pages[activePageIndex] || pages[0];
-  const figures = activePage?.figures || [];
-  const selectedFigureId = activePage?.selectedFigureId || null;
-  const activeFigure = figures.find((figure) => figure.id === selectedFigureId) || null;
+  const documentState = useDocumentPages(editorRef, setSavedAt, setStatus);
 
-  function snapshotCurrentPage(pageList = pages, pageId = currentPageId) {
-    if (!editorRef.current) return pageList;
+  const {
+    pages,
+    currentPageId,
+    currentPage,
+    snapshotCurrentPage,
+    updatePage,
+    updateCurrentPage,
+    setPages,
+    selectPage,
+    addPage,
+    deleteCurrentPage,
+    saveDocument,
+    resetDocument,
+  } = documentState;
 
-    syncMathFields(editorRef.current);
+  const geometry = useGeometryEditor({
+    pages,
+    currentPageId,
+    currentPage,
+    snapshotCurrentPage,
+    setPages,
+    updatePage,
+    updateCurrentPage,
+    setActiveTool,
+    setStatus,
+  });
 
-    const html = editorRef.current.innerHTML;
-
-    return pageList.map((page) =>
-      page.id === pageId
-        ? {
-            ...page,
-            html,
-          }
-        : page
-    );
-  }
-
-  function setPages(nextPages, nextCurrentPageId = currentPageId) {
-    setDoc({
-      pages: nextPages.map(ensurePageFigures),
-      currentPageId: nextCurrentPageId,
-    });
-  }
-
-  function updatePage(pageId, patchOrGetter) {
-    setDoc((oldDoc) => {
-      const oldPages = oldDoc.pages.map(ensurePageFigures);
-
-      return {
-        ...oldDoc,
-        pages: oldPages.map((page) => {
-          if (page.id !== pageId) return page;
-
-          const patch = typeof patchOrGetter === "function" ? patchOrGetter(page) : patchOrGetter;
-
-          return {
-            ...page,
-            ...patch,
-          };
-        }),
-      };
-    });
-  }
-
-  function updateCurrentPage(patchOrGetter) {
-    updatePage(currentPageId, patchOrGetter);
-  }
-
-  function selectPage(pageId) {
-    if (pageId === currentPageId) return;
-
-    setDoc((oldDoc) => ({
-      pages: snapshotCurrentPage(oldDoc.pages.map(ensurePageFigures), oldDoc.currentPageId),
-      currentPageId: pageId,
-    }));
-
-    setStatus("Đã chuyển trang");
-  }
-
-  function addPage() {
-    const savedPages = snapshotCurrentPage();
-    const newPage = createBlankPage(savedPages.length + 1);
-
-    setPages([...savedPages, newPage], newPage.id);
-    setStatus("Đã thêm trang mới");
-  }
-
-  function deletePage() {
-    if (pages.length <= 1) {
-      setStatus("Tài liệu cần ít nhất 1 trang");
-      return;
-    }
-
-    if (!confirm("Xóa trang hiện tại?")) return;
-
-    const savedPages = snapshotCurrentPage();
-    const filtered = savedPages.filter((page) => page.id !== currentPageId);
-    const nextPage = filtered[Math.max(0, activePageIndex - 1)] || filtered[0];
-
-    setPages(filtered, nextPage.id);
-    setStatus("Đã xóa trang");
-  }
+  const {
+    figures,
+    activeFigure,
+    addFigure,
+    selectFigure,
+    deselectFigure,
+    updateFigure,
+    updateActiveFigure,
+    updateFigureBox,
+    deleteFigure,
+    startDraw,
+    clearActiveFigure,
+  } = geometry;
 
   function insertHtml(html, message) {
     insertHtmlToEditor({
@@ -147,7 +84,11 @@ export default function App() {
       message,
     });
 
-    setTimeout(() => updateCurrentPage({ html: editorRef.current?.innerHTML || "" }), 0);
+    setTimeout(() => {
+      updateCurrentPage({
+        html: editorRef.current?.innerHTML || "",
+      });
+    }, 0);
   }
 
   function insertSmartFormula(value = "") {
@@ -161,7 +102,11 @@ export default function App() {
       value,
     });
 
-    setTimeout(() => updateCurrentPage({ html: editorRef.current?.innerHTML || "" }), 0);
+    setTimeout(() => {
+      updateCurrentPage({
+        html: editorRef.current?.innerHTML || "",
+      });
+    }, 0);
   }
 
   function insertTextBox() {
@@ -173,118 +118,10 @@ export default function App() {
     );
   }
 
-  function addFigure(tool = "select") {
-    const savedPages = snapshotCurrentPage();
-    const current = savedPages.find((page) => page.id === currentPageId) || activePage;
-    const nextIndex = (current.figures || []).length + 1;
-    const newFigure = {
-      ...createFigure(nextIndex),
-      tool,
-    };
-
-    const nextPages = savedPages.map((page) =>
-      page.id === currentPageId
-        ? {
-            ...page,
-            figures: [...(page.figures || []), newFigure],
-            selectedFigureId: newFigure.id,
-          }
-        : page
-    );
-
-    setPages(nextPages, currentPageId);
-    setActiveTool(tool === "pen" ? "draw" : "shape");
-    setStatus("Đã thêm khung hình trống. Chọn công cụ bên phải để vẽ.");
-  }
-
-  function startDraw() {
-    if (activeFigure) {
-      updateActiveFigure(activeFigure.id, {
-        ...activeFigure,
-        tool: "pen",
-      });
-      setActiveTool("draw");
-      setStatus("Đang bật vẽ tay trong hình đang chọn");
-      return;
-    }
-
-    addFigure("pen");
-  }
-
-  function deselectFigure(pageId = currentPageId) {
-    updatePage(pageId, {
-      selectedFigureId: null,
-    });
-  }
-
-  function selectFigure(pageId, figureId) {
-    updatePage(pageId, {
-      selectedFigureId: figureId,
-    });
-
-    setActiveTool("shape");
-    setStatus("Đã chọn hình");
-  }
-
-  function updateFigure(pageId, figureId, nextFigure) {
-    updatePage(pageId, (page) => ({
-      figures: (page.figures || []).map((figure) =>
-        figure.id === figureId ? nextFigure : figure
-      ),
-      selectedFigureId: figureId,
-    }));
-  }
-
-  function updateActiveFigure(figureId, nextFigure) {
-    updateFigure(currentPageId, figureId, nextFigure);
-  }
-
-  function updateFigureBox(pageId, figureId, box) {
-    updatePage(pageId, (page) => ({
-      figures: (page.figures || []).map((figure) =>
-        figure.id === figureId
-          ? {
-              ...figure,
-              box,
-            }
-          : figure
-      ),
-      selectedFigureId: figureId,
-    }));
-  }
-
-  function deleteFigure(pageId, figureId) {
-    updatePage(pageId, (page) => {
-      const nextFigures = (page.figures || []).filter((figure) => figure.id !== figureId);
-
-      return {
-        figures: nextFigures,
-        selectedFigureId: nextFigures[0]?.id || null,
-      };
-    });
-
-    setStatus("Đã xóa khung hình");
-  }
-
   function cleanFormat() {
     const cleanHtml = cleanEditorFormat(editorRef.current);
     updateCurrentPage({ html: cleanHtml });
     setStatus("Đã dọn format nội dung");
-  }
-
-  function saveDocument() {
-    const savedPages = snapshotCurrentPage();
-
-    setDoc((oldDoc) => ({
-      ...oldDoc,
-      pages: savedPages.map(ensurePageFigures),
-    }));
-
-    savePagesToBrowser({
-      pages: savedPages.map(ensurePageFigures),
-      setSavedAt,
-      setStatus,
-    });
   }
 
   function handleCopyText() {
@@ -300,25 +137,12 @@ export default function App() {
     copyHtml({ editorRef, setStatus });
   }
 
-  function handleReset() {
-    if (!confirm("Reset toàn bộ tài liệu về mẫu ban đầu?")) return;
-
-    resetPagesInBrowser();
-
-    const page1 = createBlankPage(1);
-    const page2 = createBlankPage(2);
-
-    setPages([page1, page2], page1.id);
-    setSavedAt("");
-    setStatus("Đã reset tài liệu");
-  }
-
   function handlePrint() {
     saveDocument();
     printPdf({ saveDocument: () => {} });
   }
 
-  if (!activePage) {
+  if (!currentPage) {
     return <div className="app">Đang tải tài liệu...</div>;
   }
 
@@ -340,12 +164,12 @@ export default function App() {
           savedAt={savedAt}
           onSelectPage={selectPage}
           onAddPage={addPage}
-          onDeletePage={deletePage}
+          onDeletePage={deleteCurrentPage}
           onSave={saveDocument}
           onCopyText={handleCopyText}
           onCopyHtml={handleCopyHtml}
           onPrint={handlePrint}
-          onReset={handleReset}
+          onReset={resetDocument}
         />
 
         <main className="main">
@@ -398,6 +222,7 @@ export default function App() {
           onUpdateFigure={updateActiveFigure}
           onDeleteFigure={(figureId) => deleteFigure(currentPageId, figureId)}
           onDeselectFigure={() => deselectFigure(currentPageId)}
+          onClearFigure={clearActiveFigure}
           onInsertSymbol={(symbol) => insertSmartFormula(symbol)}
           onInsertFormula={(formula) => insertSmartFormula(formula)}
           onInsertTemplate={(template) => insertHtml(template.html, `Đã chèn mẫu: ${template.name}`)}

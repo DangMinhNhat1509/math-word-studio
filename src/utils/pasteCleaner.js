@@ -6,14 +6,14 @@ function escapeHtml(value = "") {
 }
 
 function formatChoiceLine(line = "") {
-  const match = line.match(/^(.*?)(A[\.\)]\s*.*?)(B[\.\)]\s*.*?)(C[\.\)]\s*.*?)(D[\.\)]\s*.*)$/i);
+  const normalized = line.replace(/\s+/g, " ").trim();
+  const match = normalized.match(/^(.*?)(A[\.\)]\s*.*?)(B[\.\)]\s*.*?)(C[\.\)]\s*.*?)(D[\.\)]\s*.*)$/i);
 
   if (!match) return null;
 
   const question = match[1].trim();
   const choices = [match[2], match[3], match[4], match[5]].map((choice) => choice.trim());
-
-  const longChoice = choices.some((choice) => choice.length > 38);
+  const longChoice = choices.some((choice) => choice.length > 40);
   const className = longChoice ? "choice-list" : "choice-grid";
 
   return `
@@ -31,6 +31,7 @@ function formatPlainText(text = "") {
     .map((block) => {
       const oneLine = block.replace(/\n/g, " ").replace(/\s+/g, " ").trim();
       const choiceHtml = formatChoiceLine(oneLine);
+
       if (choiceHtml) return choiceHtml;
 
       return `<p>${escapeHtml(block).replace(/\n/g, "<br>")}</p>`;
@@ -89,7 +90,6 @@ export function handleCleanPaste(event, editor) {
 
   const html = clipboard.getData("text/html");
   const text = clipboard.getData("text/plain");
-
   const cleanHtml = html ? cleanPastedHtml(html) : formatPlainText(text);
 
   document.execCommand("insertHTML", false, cleanHtml);

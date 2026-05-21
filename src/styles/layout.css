@@ -71,7 +71,6 @@
 .side-btn,
 .tool,
 .icon-btn,
-.toggle,
 .list-buttons button {
   border: 1px solid var(--line);
   background: white;
@@ -91,7 +90,6 @@
 .side-btn:hover,
 .tool:hover,
 .icon-btn:hover,
-.toggle:hover,
 .list-buttons button:hover {
   background: var(--soft);
 }
@@ -147,8 +145,7 @@
 }
 
 .tool.active,
-.icon-btn.active,
-.toggle.active {
+.icon-btn.active {
   color: white;
   background: var(--primary);
   border-color: var(--primary);
@@ -302,8 +299,7 @@
   border-color: #fecdd3;
 }
 
-.status-card,
-.help-card {
+.status-card {
   margin-top: 12px;
   border: 1px solid var(--line);
   background: #f8fafc;
@@ -311,8 +307,7 @@
   padding: 11px;
 }
 
-.status-card p,
-.help-card p {
+.status-card p {
   margin: 5px 0;
   color: var(--muted);
   line-height: 1.45;
@@ -389,6 +384,29 @@
   font-weight: 800;
 }
 
+.geometry-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin: 10px 0;
+}
+
+.geometry-tabs button {
+  min-height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: white;
+  color: var(--text);
+  font-weight: 850;
+  font-size: 12px;
+}
+
+.geometry-tabs button.active {
+  color: white;
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
 .figure-list,
 .object-list {
   display: grid;
@@ -430,7 +448,7 @@
 }
 
 .object-item.active small {
-  color: rgba(255,255,255,0.75);
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .field-label {

@@ -53,11 +53,6 @@
   pointer-events: none;
 }
 
-.editor:focus {
-  border-color: transparent;
-  box-shadow: none;
-}
-
 .editor h1,
 .editor h2,
 .editor h3 {
@@ -92,13 +87,6 @@
   font-size: inherit !important;
   font-weight: inherit !important;
   line-height: inherit !important;
-}
-
-.math-symbol {
-  display: inline-flex;
-  padding: 0 2px;
-  font-weight: 900;
-  color: #0f172a;
 }
 
 .highlight {
