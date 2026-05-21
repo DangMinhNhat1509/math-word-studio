@@ -15,12 +15,13 @@ export const DEFAULT_HTML = `
     </span>
   </p>
 
-  <p>Diện tích tam giác ABC là:
+  <p>
+    Diện tích tam giác ABC là
     <span class="mws-formula" contenteditable="false">
       <math-field class="mws-math" smart-mode="on" data-latex="S=\\frac{1}{2}\\cdot AB\\cdot AC=\\frac{1}{2}\\cdot 6\\cdot 8=24\\,\\mathrm{cm}^{2}">
         S=\\frac{1}{2}\\cdot AB\\cdot AC=\\frac{1}{2}\\cdot 6\\cdot 8=24\\,\\mathrm{cm}^{2}
       </math-field>
-    </span>
+    </span>.
   </p>
 
   <p><b>Kết luận:</b> BC = 10cm và S = 24cm².</p>

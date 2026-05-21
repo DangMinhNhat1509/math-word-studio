@@ -85,7 +85,7 @@ export default function Toolbar({
           <Highlighter size={17} />
         </IconButton>
 
-        <span className="toolbar-separator" />
+        <span className="divider" />
 
         <IconButton title="Căn trái" onClick={onAlignLeft}>
           <AlignLeft size={17} />
@@ -97,7 +97,7 @@ export default function Toolbar({
           <AlignRight size={17} />
         </IconButton>
 
-        <span className="toolbar-separator" />
+        <span className="divider" />
 
         <IconButton active={showGrid} title="Bật/tắt lưới" onClick={() => setShowGrid(!showGrid)}>
           <Grid3X3 size={17} />

@@ -5,8 +5,18 @@ import { DEFAULT_DIAGRAM } from "./data/defaultDocument";
 
 import { useEditorSelection } from "./hooks/useEditorSelection";
 
-import { copyHtml, copyPlainText, insertHtmlToEditor, printPdf, runCommand } from "./utils/editorCommands";
-import { loadDocument, resetDocument, saveDocumentToBrowser } from "./utils/documentStorage";
+import {
+  copyHtml,
+  copyPlainText,
+  insertHtmlToEditor,
+  printPdf,
+  runCommand,
+} from "./utils/editorCommands";
+import {
+  loadDocument,
+  resetDocument,
+  saveDocumentToBrowser,
+} from "./utils/documentStorage";
 import { insertInlineMathField } from "./utils/mathLiveEditor";
 
 import Topbar from "./components/layout/Topbar";
@@ -118,7 +128,12 @@ export default function App() {
             onBold={() => runCommand("bold")}
             onItalic={() => runCommand("italic")}
             onUnderline={() => runCommand("underline")}
-            onHighlight={() => insertHtml(`<span class="highlight">nội dung cần nhấn mạnh</span>`, "Đã chèn highlight")}
+            onHighlight={() =>
+              insertHtml(
+                `<span class="highlight">nội dung cần nhấn mạnh</span>`,
+                "Đã chèn highlight"
+              )
+            }
             onAlignLeft={() => runCommand("justifyLeft")}
             onAlignCenter={() => runCommand("justifyCenter")}
             onAlignRight={() => runCommand("justifyRight")}
@@ -146,9 +161,11 @@ export default function App() {
           templates={TEMPLATES}
           diagram={diagram}
           setDiagram={setDiagram}
-          onInsertSymbol={(symbol) => insertHtml(`<span class="math-symbol">${symbol}</span>`, `Đã chèn ${symbol}`)}
+          onInsertSymbol={(symbol) => insertSmartFormula(symbol)}
           onInsertFormula={(formula) => insertSmartFormula(formula)}
-          onInsertTemplate={(template) => insertHtml(template.html, `Đã chèn mẫu: ${template.name}`)}
+          onInsertTemplate={(template) =>
+            insertHtml(template.html, `Đã chèn mẫu: ${template.name}`)
+          }
         />
       </div>
     </div>

@@ -1,5 +1,33 @@
 import "mathlive";
 
+const QUICK_SYMBOL_LATEX = {
+  "√": "\\sqrt{}",
+  "²": "^{2}",
+  "³": "^{3}",
+  "π": "\\pi",
+  "∞": "\\infty",
+  "≈": "\\approx",
+  "≠": "\\ne",
+  "≤": "\\le",
+  "≥": "\\ge",
+  "±": "\\pm",
+  "×": "\\times",
+  "÷": "\\div",
+  "∠ABC": "\\angle ABC",
+  "△ABC": "\\triangle ABC",
+  "⊥": "\\perp",
+  "∥": "\\parallel",
+  "∈": "\\in",
+  "∉": "\\notin",
+  "⇒": "\\Rightarrow",
+  "⇔": "\\Leftrightarrow",
+  "∑": "\\sum",
+  "Σ": "\\sum",
+  "α": "\\alpha",
+  "β": "\\beta",
+  "Δ": "\\Delta",
+};
+
 const SUPER = {
   "⁰": "0",
   "¹": "1",
@@ -15,8 +43,8 @@ const SUPER = {
 
 function normalizeSuperscripts(text) {
   return String(text).replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]+/g, (match) => {
-    const value = [...match].map((char) => SUPER[char] || "").join("");
-    return `^{${value}}`;
+    const number = [...match].map((char) => SUPER[char] || "").join("");
+    return `^{${number}}`;
   });
 }
 
@@ -24,6 +52,8 @@ export function textToLatex(input = "") {
   let text = String(input || "").trim();
 
   if (!text) return "";
+
+  if (QUICK_SYMBOL_LATEX[text]) return QUICK_SYMBOL_LATEX[text];
 
   text = normalizeSuperscripts(text);
 
@@ -48,7 +78,7 @@ export function textToLatex(input = "") {
     .replace(/căn\s*\(([^()]+)\)/gi, "\\sqrt{$1}")
     .replace(/sqrt\s*\(([^()]+)\)/gi, "\\sqrt{$1}")
     .replace(/√\s*\(([^()]+)\)/g, "\\sqrt{$1}")
-    .replace(/√\s*([A-Za-z0-9\\{}^]+)/g, "\\sqrt{$1}");
+    .replace(/√\s*([A-Za-z0-9\\{}^+\-*/.]+)/g, "\\sqrt{$1}");
 
   text = text
     .replace(/\bint\s*_\s*([^\s^]+)\s*\^\s*([^\s]+)\s*/gi, "\\int_{$1}^{$2} ")
@@ -80,45 +110,6 @@ export function textToLatex(input = "") {
   return text.replace(/\s+/g, " ").trim();
 }
 
-function makeMathField(rawValue = "", { focus = false } = {}) {
-  const latex = textToLatex(rawValue);
-
-  const wrapper = document.createElement("span");
-  wrapper.className = "mws-formula";
-  wrapper.setAttribute("contenteditable", "false");
-
-  const field = document.createElement("math-field");
-  field.className = "mws-math";
-  field.setAttribute("default-mode", "math");
-  field.setAttribute("smart-mode", "on");
-  field.setAttribute("smart-fence", "on");
-  field.setAttribute("smart-superscript", "on");
-  field.setAttribute("virtual-keyboard-policy", "manual");
-  field.setAttribute("math-mode-space", " ");
-  field.setAttribute("data-latex", latex);
-  field.setAttribute("value", latex);
-  field.textContent = latex || "";
-
-  wrapper.appendChild(field);
-
-  requestAnimationFrame(() => {
-    prepareOneMathField(field);
-
-    if (latex) {
-      try {
-        field.value = latex;
-        field.setValue?.(latex);
-      } catch {}
-    }
-
-    if (focus) {
-      field.focus();
-    }
-  });
-
-  return wrapper;
-}
-
 function placeCaretAfter(node) {
   const range = document.createRange();
   const selection = window.getSelection();
@@ -143,6 +134,7 @@ function prepareOneMathField(field) {
   } catch {}
 
   const latex = field.dataset.latex || field.getAttribute("value") || field.textContent || "";
+
   if (latex) {
     requestAnimationFrame(() => {
       try {
@@ -164,18 +156,62 @@ function prepareOneMathField(field) {
       event.preventDefault();
       placeCaretAfter(field.closest(".mws-formula") || field);
     }
-
-    if (event.key === "Enter") {
-      event.preventDefault();
-
-      const line = document.createElement("div");
-      line.innerHTML = "<br>";
-
-      const wrapper = field.closest(".mws-formula") || field;
-      wrapper.after(line);
-      placeCaretAfter(line);
-    }
   });
+}
+
+function makeMathField(rawValue = "", focus = false) {
+  const latex = textToLatex(rawValue);
+
+  const wrapper = document.createElement("span");
+  wrapper.className = "mws-formula";
+  wrapper.setAttribute("contenteditable", "false");
+
+  const field = document.createElement("math-field");
+  field.className = "mws-math";
+  field.setAttribute("smart-mode", "on");
+  field.setAttribute("smart-fence", "on");
+  field.setAttribute("smart-superscript", "on");
+  field.setAttribute("virtual-keyboard-policy", "manual");
+  field.setAttribute("data-latex", latex);
+  field.setAttribute("value", latex);
+  field.textContent = latex;
+
+  wrapper.appendChild(field);
+
+  requestAnimationFrame(() => {
+    prepareOneMathField(field);
+    try {
+      field.value = latex;
+      field.setValue?.(latex);
+    } catch {}
+    if (focus) field.focus();
+  });
+
+  return wrapper;
+}
+
+function getActiveMathField() {
+  const active = document.activeElement;
+  if (active?.tagName === "MATH-FIELD") return active;
+  return null;
+}
+
+function insertIntoMathField(field, value) {
+  const latex = textToLatex(value);
+
+  try {
+    field.focus();
+    field.executeCommand?.(["insert", latex]);
+  } catch {
+    field.value = `${field.value || ""}${latex}`;
+  }
+
+  const nextValue = field.value || field.getAttribute("value") || latex;
+  field.dataset.latex = nextValue;
+  field.setAttribute("data-latex", nextValue);
+  field.setAttribute("value", nextValue);
+
+  return true;
 }
 
 export function prepareEditorMath(editor) {
@@ -188,7 +224,7 @@ export function prepareEditorMath(editor) {
       block.textContent ||
       "";
 
-    const formula = makeMathField(source, { focus: false });
+    const formula = makeMathField(source, false);
     const space = document.createTextNode("\u00A0");
     block.replaceWith(formula, space);
   });
@@ -204,6 +240,7 @@ export function syncMathFields(root) {
     field.dataset.latex = value;
     field.setAttribute("data-latex", value);
     field.setAttribute("value", value);
+    field.textContent = value;
   });
 }
 
@@ -214,6 +251,14 @@ export function insertInlineMathField({
   setStatus,
   value = "",
 }) {
+  const activeField = getActiveMathField();
+
+  if (activeField) {
+    insertIntoMathField(activeField, value);
+    setStatus?.("Đã chèn vào công thức đang sửa");
+    return;
+  }
+
   const editor = editorRef.current;
   if (!editor) return;
 
@@ -231,7 +276,7 @@ export function insertInlineMathField({
     range.collapse(false);
   }
 
-  const formula = makeMathField(value, { focus: true });
+  const formula = makeMathField(value, true);
   const space = document.createTextNode("\u00A0");
 
   range.deleteContents();
@@ -239,10 +284,10 @@ export function insertInlineMathField({
   range.insertNode(formula);
 
   placeCaretAfter(space);
-  rememberSelection?.();
   prepareEditorMath(editor);
+  rememberSelection?.();
 
-  setStatus?.(value ? "Đã chèn công thức inline, bấm vào công thức để sửa" : "Đang nhập công thức inline");
+  setStatus?.("Đã chèn công thức tại đúng vị trí con trỏ");
 }
 
 function findCurrentBlock(editor, node) {
@@ -271,7 +316,7 @@ export function convertCurrentBlockToInlineMath(editor) {
   const source = (block.innerText || block.textContent || "").trim();
   if (!source) return false;
 
-  const formula = makeMathField(source, { focus: true });
+  const formula = makeMathField(source, true);
   const space = document.createTextNode("\u00A0");
 
   block.innerHTML = "";
@@ -291,13 +336,12 @@ export function autoConvertTypedMathAtCaret(editor) {
 
   const node = selection.anchorNode;
   if (!node || node.nodeType !== Node.TEXT_NODE || !editor.contains(node)) return false;
-
   if (node.parentElement?.closest?.(".mws-formula")) return false;
 
   const offset = selection.anchorOffset;
   const before = node.nodeValue.slice(0, offset);
 
-  const match = before.match(/(?:^|[\s(])((?:\d+|[A-Za-z])\s*\/\s*(?:\d+|[A-Za-z])|sqrt\([^)]{1,50}\)|căn\([^)]{1,50}\)|√\([^)]{1,50}\))$/i);
+  const match = before.match(/(?:^|[\s(])((?:\d+|[A-Za-z])\s*\/\s*(?:\d+|[A-Za-z])|sqrt\([^)]{1,60}\)|căn\([^)]{1,60}\)|√\([^)]{1,60}\))$/i);
 
   if (!match) return false;
 
@@ -309,7 +353,7 @@ export function autoConvertTypedMathAtCaret(editor) {
   range.setEnd(node, offset);
   range.deleteContents();
 
-  const formula = makeMathField(raw, { focus: false });
+  const formula = makeMathField(raw, false);
   const space = document.createTextNode("\u00A0");
 
   range.insertNode(space);

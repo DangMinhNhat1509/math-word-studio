@@ -12,8 +12,21 @@ export function insertHtmlToEditor({
   setStatus,
   message = "Đã chèn nội dung",
 }) {
-  editorRef.current?.focus();
+  const editor = editorRef.current;
+  if (!editor) return;
+
+  editor.focus();
   restoreSelection();
+
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0 || !editor.contains(selection.anchorNode)) {
+    const range = document.createRange();
+    range.selectNodeContents(editor);
+    range.collapse(false);
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+  }
+
   runCommand("insertHTML", html);
   rememberSelection();
   setStatus(message);

@@ -1,5 +1,5 @@
 import { DEFAULT_DIAGRAM, DEFAULT_HTML } from "../data/defaultDocument";
-import { syncMathFields } from "./mathLiveEditor";
+import { prepareEditorMath, syncMathFields } from "./mathLiveEditor";
 
 export function loadDocument({ editorRef, setDiagram, setSavedAt }) {
   const savedHtml = localStorage.getItem("mws_document_html");
@@ -8,6 +8,7 @@ export function loadDocument({ editorRef, setDiagram, setSavedAt }) {
 
   if (editorRef.current) {
     editorRef.current.innerHTML = savedHtml || DEFAULT_HTML;
+    prepareEditorMath(editorRef.current);
   }
 
   if (savedDiagram) {
@@ -38,7 +39,11 @@ export function resetDocument({ editorRef, setSavedAt, setStatus }) {
   if (!confirm("Reset về mẫu ban đầu?")) return;
 
   editorRef.current.innerHTML = DEFAULT_HTML;
+  prepareEditorMath(editorRef.current);
+
   localStorage.removeItem("mws_document_html");
+  localStorage.removeItem("mws_saved_at");
+
   setSavedAt("");
   setStatus("Đã reset mẫu");
 }

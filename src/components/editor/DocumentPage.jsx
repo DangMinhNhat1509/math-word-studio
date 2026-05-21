@@ -41,7 +41,7 @@ export default function DocumentPage({
 
       if (converted) {
         setActiveTool("math");
-        setStatus("Đã đổi dòng hiện tại thành công thức inline, vẫn sửa trực tiếp được");
+        setStatus("Đã đổi dòng hiện tại thành công thức inline, vẫn sửa được");
         rememberSelection();
       } else {
         setStatus("Đặt con trỏ trong dòng công thức rồi bấm Ctrl + Enter");
@@ -54,6 +54,7 @@ export default function DocumentPage({
 
     if (event.target?.tagName !== "MATH-FIELD") {
       const converted = autoConvertTypedMathAtCaret(editorRef.current);
+
       if (converted) {
         setStatus("Đã tự đổi thành phân số/căn inline");
       } else {
@@ -77,7 +78,7 @@ export default function DocumentPage({
         </div>
 
         <div className="edit-hint">
-          Bấm <b>Công thức</b> để chèn công thức ngay tại con trỏ. Gõ <b>1/2</b> trong bài sẽ tự thành phân số. Bấm vào công thức để sửa lại trực tiếp.
+          Bấm <b>Công thức</b> để chèn ngay tại con trỏ. Gõ <b>1/2</b>, <b>sqrt(100)</b>, <b>căn(x+1)</b> trong bài sẽ tự thành công thức. Bấm vào công thức để sửa trực tiếp.
         </div>
 
         <div
@@ -108,7 +109,7 @@ export default function DocumentPage({
 
         <div className="paper-note">
           <CheckCircle2 size={17} />
-          <span>Công thức hiện là inline math: nằm chung với chữ, sửa được, hỗ trợ phân số, căn, mũ, chỉ số dưới và tích phân.</span>
+          <span>Công thức nằm chung với chữ, bấm vào là sửa được. Nút ký hiệu/công thức mẫu sẽ chèn đúng vị trí con trỏ.</span>
         </div>
       </section>
     </div>
