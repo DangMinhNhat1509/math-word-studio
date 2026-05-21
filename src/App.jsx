@@ -43,8 +43,6 @@ export default function App() {
   });
 
   const [activeTool, setActiveTool] = useState("text");
-  const [showGrid, setShowGrid] = useState(true);
-  const [showAxis, setShowAxis] = useState(false);
   const [status, setStatus] = useState("Đã sẵn sàng");
   const [savedAt, setSavedAt] = useState(() => getSavedAt());
 
@@ -53,8 +51,8 @@ export default function App() {
   const activePageIndex = Math.max(0, pages.findIndex((page) => page.id === currentPageId));
   const activePage = pages[activePageIndex] || pages[0];
   const figures = activePage?.figures || [];
-  const selectedFigureId = activePage?.selectedFigureId || figures[0]?.id || null;
-  const activeFigure = figures.find((figure) => figure.id === selectedFigureId) || figures[0] || null;
+  const selectedFigureId = activePage?.selectedFigureId || null;
+  const activeFigure = figures.find((figure) => figure.id === selectedFigureId) || null;
 
   function snapshotCurrentPage(pageList = pages, pageId = currentPageId) {
     if (!editorRef.current) return pageList;
@@ -175,11 +173,14 @@ export default function App() {
     );
   }
 
-  function addFigure() {
+  function addFigure(tool = "select") {
     const savedPages = snapshotCurrentPage();
     const current = savedPages.find((page) => page.id === currentPageId) || activePage;
     const nextIndex = (current.figures || []).length + 1;
-    const newFigure = createFigure(nextIndex);
+    const newFigure = {
+      ...createFigure(nextIndex),
+      tool,
+    };
 
     const nextPages = savedPages.map((page) =>
       page.id === currentPageId
@@ -192,8 +193,28 @@ export default function App() {
     );
 
     setPages(nextPages, currentPageId);
-    setActiveTool("shape");
+    setActiveTool(tool === "pen" ? "draw" : "shape");
     setStatus("Đã thêm khung hình trống. Chọn công cụ bên phải để vẽ.");
+  }
+
+  function startDraw() {
+    if (activeFigure) {
+      updateActiveFigure(activeFigure.id, {
+        ...activeFigure,
+        tool: "pen",
+      });
+      setActiveTool("draw");
+      setStatus("Đang bật vẽ tay trong hình đang chọn");
+      return;
+    }
+
+    addFigure("pen");
+  }
+
+  function deselectFigure(pageId = currentPageId) {
+    updatePage(pageId, {
+      selectedFigureId: null,
+    });
   }
 
   function selectFigure(pageId, figureId) {
@@ -232,8 +253,8 @@ export default function App() {
     }));
   }
 
-  function deleteFigure(figureId) {
-    updateCurrentPage((page) => {
+  function deleteFigure(pageId, figureId) {
+    updatePage(pageId, (page) => {
       const nextFigures = (page.figures || []).filter((figure) => figure.id !== figureId);
 
       return {
@@ -243,52 +264,6 @@ export default function App() {
     });
 
     setStatus("Đã xóa khung hình");
-  }
-
-  function deleteSelectedObject() {
-    if (!activeFigure?.selectedObjectId) return;
-
-    const selectedId = activeFigure.selectedObjectId;
-
-    const nextObjects = (activeFigure.objects || []).filter((object) => {
-      if (object.id === selectedId) return false;
-
-      if (object.type === "segment") {
-        return object.from !== selectedId && object.to !== selectedId;
-      }
-
-      if (object.type === "circle") {
-        return object.center !== selectedId && object.through !== selectedId;
-      }
-
-      if (object.type === "rightAngle") {
-        return object.at !== selectedId && object.p1 !== selectedId && object.p2 !== selectedId;
-      }
-
-      return true;
-    });
-
-    updateActiveFigure(activeFigure.id, {
-      ...activeFigure,
-      objects: nextObjects,
-      selectedObjectId: null,
-      pendingPointId: null,
-    });
-
-    setStatus("Đã xóa đối tượng");
-  }
-
-  function clearActiveFigure() {
-    if (!activeFigure) return;
-
-    updateActiveFigure(activeFigure.id, {
-      ...activeFigure,
-      objects: [],
-      selectedObjectId: null,
-      pendingPointId: null,
-    });
-
-    setStatus("Đã xóa hết trong khung hình");
   }
 
   function cleanFormat() {
@@ -377,10 +352,6 @@ export default function App() {
           <Toolbar
             activeTool={activeTool}
             setActiveTool={setActiveTool}
-            showGrid={showGrid}
-            setShowGrid={setShowGrid}
-            showAxis={showAxis}
-            setShowAxis={setShowAxis}
             onBold={() => runCommand("bold")}
             onItalic={() => runCommand("italic")}
             onUnderline={() => runCommand("underline")}
@@ -392,7 +363,8 @@ export default function App() {
             onAlignRight={() => runCommand("justifyRight")}
             onMath={() => insertSmartFormula("")}
             onTextBox={insertTextBox}
-            onAddFigure={addFigure}
+            onAddFigure={() => addFigure("select")}
+            onDraw={startDraw}
             onCleanFormat={cleanFormat}
           />
 
@@ -403,13 +375,13 @@ export default function App() {
             editorRef={editorRef}
             activeTool={activeTool}
             rememberSelection={rememberSelection}
-            showGrid={showGrid}
-            showAxis={showAxis}
             onSelectPage={selectPage}
+            onDeselectFigure={deselectFigure}
             onUpdatePageHtml={(pageId, html) => updatePage(pageId, { html })}
             onUpdateFigure={updateFigure}
             onUpdateFigureBox={updateFigureBox}
             onSelectFigure={selectFigure}
+            onDeleteFigure={deleteFigure}
             setActiveTool={setActiveTool}
             setStatus={setStatus}
             onInsertSmartFormula={insertSmartFormula}
@@ -424,9 +396,8 @@ export default function App() {
           activeFigure={activeFigure}
           onSelectFigure={(figureId) => selectFigure(currentPageId, figureId)}
           onUpdateFigure={updateActiveFigure}
-          onDeleteFigure={deleteFigure}
-          onDeleteSelectedObject={deleteSelectedObject}
-          onClearFigure={clearActiveFigure}
+          onDeleteFigure={(figureId) => deleteFigure(currentPageId, figureId)}
+          onDeselectFigure={() => deselectFigure(currentPageId)}
           onInsertSymbol={(symbol) => insertSmartFormula(symbol)}
           onInsertFormula={(formula) => insertSmartFormula(formula)}
           onInsertTemplate={(template) => insertHtml(template.html, `Đã chèn mẫu: ${template.name}`)}

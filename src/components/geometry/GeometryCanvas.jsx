@@ -3,16 +3,13 @@ import {
   createCircle,
   createPoint,
   createSegment,
-  createTrianglePreset,
+  createStroke,
+  deleteObjectAndDependents,
   GEOMETRY_SIZE,
   getPoint,
   nextPointLabel,
+  distance,
 } from "../../utils/figures";
-
-function distance(a, b) {
-  if (!a || !b) return 0;
-  return Math.hypot(a.x - b.x, a.y - b.y);
-}
 
 function midpoint(a, b) {
   return {
@@ -60,11 +57,25 @@ function rightAnglePath(objects, object) {
   return `M ${q1.x} ${q1.y} L ${q3.x} ${q3.y} L ${q2.x} ${q2.y}`;
 }
 
+function isTypingTarget(target) {
+  if (!target) return false;
+
+  const tag = target.tagName;
+
+  return (
+    tag === "INPUT" ||
+    tag === "TEXTAREA" ||
+    tag === "MATH-FIELD" ||
+    target.isContentEditable ||
+    target.closest?.("[contenteditable='true']")
+  );
+}
+
 export default function GeometryCanvas({
   figure,
   onChange,
-  showGrid,
-  showAxis,
+  onDeleteFigure,
+  isActive,
 }) {
   const svgRef = useRef(null);
   const dragRef = useRef(null);
@@ -109,6 +120,19 @@ export default function GeometryCanvas({
     });
   }
 
+  function deleteSelectedObject() {
+    if (!selectedObjectId) {
+      onDeleteFigure?.();
+      return;
+    }
+
+    updateFigure({
+      objects: deleteObjectAndDependents(objects, selectedObjectId),
+      selectedObjectId: null,
+      pendingPointId: null,
+    });
+  }
+
   function addPointAt(event) {
     const p = getSvgPoint(event);
     const point = createPoint(nextPointLabel(objects), p.x, p.y);
@@ -119,12 +143,32 @@ export default function GeometryCanvas({
     });
   }
 
+  function startPenStroke(event) {
+    const p = getSvgPoint(event);
+    const stroke = createStroke([p]);
+
+    dragRef.current = {
+      mode: "pen",
+      strokeId: stroke.id,
+    };
+
+    updateObjects([...objects, stroke], {
+      selectedObjectId: stroke.id,
+    });
+  }
+
   function handleCanvasPointerDown(event) {
     if (event.target !== svgRef.current) return;
 
     if (tool === "point") {
       event.preventDefault();
       addPointAt(event);
+      return;
+    }
+
+    if (tool === "pen") {
+      event.preventDefault();
+      startPenStroke(event);
       return;
     }
 
@@ -215,11 +259,44 @@ export default function GeometryCanvas({
   }
 
   useEffect(() => {
+    function handleKeyDown(event) {
+      if (!isActive) return;
+      if (isTypingTarget(event.target)) return;
+
+      if (event.key === "Delete" || event.key === "Backspace") {
+        event.preventDefault();
+        deleteSelectedObject();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  });
+
+  useEffect(() => {
     function handleMove(event) {
       const drag = dragRef.current;
       if (!drag) return;
 
       event.preventDefault();
+
+      if (drag.mode === "pen") {
+        const p = getSvgPoint(event);
+
+        updateObjects(
+          objects.map((object) =>
+            object.id === drag.strokeId && object.type === "stroke"
+              ? {
+                  ...object,
+                  points: [...(object.points || []), p],
+                }
+              : object
+          )
+        );
+
+        return;
+      }
 
       const dx = ((event.clientX - drag.startX) / (svgRef.current?.getBoundingClientRect().width || 1)) * GEOMETRY_SIZE.W;
       const dy = ((event.clientY - drag.startY) / (svgRef.current?.getBoundingClientRect().height || 1)) * GEOMETRY_SIZE.H;
@@ -263,9 +340,9 @@ export default function GeometryCanvas({
 
   return (
     <div className="geometry-canvas">
-      {showGrid && <div className="grid-layer" />}
+      {figure.showGrid && <div className="grid-layer" />}
 
-      {showAxis && (
+      {figure.showAxis && (
         <>
           <div className="axis-x" />
           <div className="axis-y" />
@@ -299,6 +376,17 @@ export default function GeometryCanvas({
               />
             );
           })}
+
+        {objects
+          .filter((object) => object.type === "stroke")
+          .map((object) => (
+            <polyline
+              key={object.id}
+              className={`geo-stroke${selectedClass(object.id)}`}
+              points={(object.points || []).map((p) => `${p.x},${p.y}`).join(" ")}
+              onPointerDown={(event) => selectLineObject(event, object.id)}
+            />
+          ))}
 
         {objects
           .filter((object) => object.type === "segment")
@@ -369,21 +457,13 @@ export default function GeometryCanvas({
 
       {objects.length === 0 && (
         <div className="empty-geometry">
-          Chọn công cụ bên phải: <b>Điểm</b>, <b>Đoạn</b>, <b>Đường tròn</b> hoặc <b>Tam giác mẫu</b>.
+          Khung trống. Chọn <b>Điểm</b>, <b>Đoạn</b>, <b>Tròn</b>, <b>Vẽ tay</b> hoặc <b>Tam giác mẫu</b> ở sidebar.
         </div>
       )}
 
-      {tool === "segment" && (
-        <div className="geometry-help">
-          Chọn 2 điểm để nối thành đoạn thẳng.
-        </div>
-      )}
-
-      {tool === "circle" && (
-        <div className="geometry-help">
-          Chọn tâm rồi chọn điểm trên đường tròn.
-        </div>
-      )}
+      {tool === "segment" && <div className="geometry-help">Chọn 2 điểm để nối thành đoạn thẳng.</div>}
+      {tool === "circle" && <div className="geometry-help">Chọn tâm rồi chọn điểm trên đường tròn.</div>}
+      {tool === "pen" && <div className="geometry-help">Giữ chuột và kéo trong khung để vẽ tay.</div>}
     </div>
   );
 }

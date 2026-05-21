@@ -122,6 +122,33 @@
   vertical-align: top;
 }
 
+.choice-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px 14px;
+  margin: 8px 0 14px;
+}
+
+.choice-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+  margin: 8px 0 14px;
+}
+
+.answer-grid {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(42px, 1fr));
+  gap: 6px;
+  margin: 8px 0 14px;
+}
+
+.answer-grid span {
+  border: 1px solid #cbd5e1;
+  padding: 4px 6px;
+  text-align: center;
+}
+
 .figure-box {
   position: absolute;
   z-index: 4;

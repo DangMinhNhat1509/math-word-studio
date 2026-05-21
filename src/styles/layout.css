@@ -373,13 +373,31 @@
   text-align: left;
 }
 
-.figure-list {
+.inspector-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.back-panel-btn {
+  border: 1px solid var(--line);
+  background: #f8fafc;
+  border-radius: 7px;
+  padding: 7px 9px;
+  font-weight: 800;
+}
+
+.figure-list,
+.object-list {
   display: grid;
   gap: 7px;
   margin-bottom: 8px;
 }
 
-.figure-item {
+.figure-item,
+.object-item {
   min-height: 34px;
   border: 1px solid var(--line);
   border-radius: 7px;
@@ -392,10 +410,27 @@
   font-weight: 800;
 }
 
-.figure-item.active {
+.object-item {
+  display: grid;
+  gap: 2px;
+  text-align: left;
+  padding: 8px 10px;
+}
+
+.object-item small {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.figure-item.active,
+.object-item.active {
   color: white;
   background: var(--primary);
   border-color: var(--primary);
+}
+
+.object-item.active small {
+  color: rgba(255,255,255,0.75);
 }
 
 .field-label {
@@ -422,7 +457,8 @@
 }
 
 .geometry-tools,
-.geometry-actions {
+.geometry-actions,
+.geometry-display-options {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 7px;
@@ -431,6 +467,7 @@
 
 .geometry-tools button,
 .geometry-actions button,
+.geometry-display-options button,
 .danger-action,
 .soft-action {
   min-height: 34px;
@@ -445,7 +482,8 @@
   font-size: 12px;
 }
 
-.geometry-tools button.active {
+.geometry-tools button.active,
+.geometry-display-options button.active {
   color: white;
   background: var(--primary);
   border-color: var(--primary);
@@ -455,12 +493,35 @@
   grid-template-columns: 1fr;
 }
 
+.object-panel {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  background: #f8fafc;
+  margin-top: 10px;
+}
+
+.object-panel p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .selected-object-card {
   border: 1px solid var(--line);
   background: #f8fafc;
   border-radius: 8px;
   padding: 10px;
   margin: 10px 0;
+}
+
+.measure-note {
+  padding: 8px;
+  border-radius: 7px;
+  background: white;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .danger-action {

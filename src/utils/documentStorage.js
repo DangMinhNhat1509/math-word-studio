@@ -1,7 +1,7 @@
 import { DEFAULT_HTML } from "../data/defaultDocument";
 import { ensurePageFigures } from "./figures";
 
-const PAGES_KEY = "mws_pages_v5";
+const PAGES_KEY = "mws_pages_v7";
 const SAVED_AT_KEY = "mws_saved_at";
 
 function makeId() {
@@ -20,24 +20,15 @@ export function createBlankPage(index = 1, html = "<p><br></p>") {
 }
 
 export function getInitialPages() {
-  try {
-    const rawPages = localStorage.getItem(PAGES_KEY);
-    const parsedPages = rawPages ? JSON.parse(rawPages) : null;
+  const keys = ["mws_pages_v7", "mws_pages_v6", "mws_pages_v5", "mws_pages_v4", "mws_pages_v3"];
 
-    if (Array.isArray(parsedPages) && parsedPages.length > 0) {
-      return parsedPages.map(ensurePageFigures);
-    }
-  } catch {}
-
-  const oldKeys = ["mws_pages_v4", "mws_pages_v3"];
-
-  for (const key of oldKeys) {
+  for (const key of keys) {
     try {
-      const raw = localStorage.getItem(key);
-      const parsed = raw ? JSON.parse(raw) : null;
+      const rawPages = localStorage.getItem(key);
+      const parsedPages = rawPages ? JSON.parse(rawPages) : null;
 
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed.map(ensurePageFigures);
+      if (Array.isArray(parsedPages) && parsedPages.length > 0) {
+        return parsedPages.map(ensurePageFigures);
       }
     } catch {}
   }
@@ -65,9 +56,10 @@ export function savePagesToBrowser({ pages, setSavedAt, setStatus }) {
 }
 
 export function resetPagesInBrowser() {
-  localStorage.removeItem(PAGES_KEY);
-  localStorage.removeItem("mws_pages_v4");
-  localStorage.removeItem("mws_pages_v3");
+  ["mws_pages_v7", "mws_pages_v6", "mws_pages_v5", "mws_pages_v4", "mws_pages_v3"].forEach((key) =>
+    localStorage.removeItem(key)
+  );
+
   localStorage.removeItem("mws_document_html");
   localStorage.removeItem("mws_diagram");
   localStorage.removeItem(SAVED_AT_KEY);

@@ -78,7 +78,8 @@
 
 .geo-segment.selected,
 .geo-circle.selected,
-.geo-right-angle.selected {
+.geo-right-angle.selected,
+.geo-stroke.selected {
   stroke: #2563eb;
 }
 
@@ -86,6 +87,14 @@
   fill: transparent;
   stroke: #0f172a;
   stroke-width: 2.5;
+}
+
+.geo-stroke {
+  fill: none;
+  stroke: #0f172a;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .geo-right-angle,

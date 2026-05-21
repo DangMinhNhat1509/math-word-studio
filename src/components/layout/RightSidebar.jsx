@@ -1,5 +1,37 @@
-import { Braces, Circle, Eraser, MousePointer2, PenLine, Sigma, Sparkles, Trash2, Triangle } from "lucide-react";
-import { createCircle, createPoint, createSegment, createTrianglePreset, getPoint, nextPointLabel } from "../../utils/figures";
+import {
+  Braces,
+  Circle,
+  Eraser,
+  Grid3X3,
+  MousePointer2,
+  PenLine,
+  Sigma,
+  Sparkles,
+  Trash2,
+  Triangle,
+} from "lucide-react";
+
+import {
+  createCircle,
+  createPoint,
+  createSegment,
+  createTrianglePreset,
+  createRightAngle,
+  deleteObjectAndDependents,
+  getPoint,
+  measureSegment,
+  nextPointLabel,
+  objectLabel,
+} from "../../utils/figures";
+
+function objectKindName(type) {
+  if (type === "point") return "Điểm";
+  if (type === "segment") return "Đoạn/cạnh";
+  if (type === "circle") return "Đường tròn";
+  if (type === "rightAngle") return "Góc vuông";
+  if (type === "stroke") return "Vẽ tay";
+  return "Đối tượng";
+}
 
 export default function RightSidebar({
   symbols,
@@ -10,8 +42,7 @@ export default function RightSidebar({
   onSelectFigure,
   onUpdateFigure,
   onDeleteFigure,
-  onDeleteSelectedObject,
-  onClearFigure,
+  onDeselectFigure,
   onInsertSymbol,
   onInsertFormula,
   onInsertTemplate,
@@ -33,13 +64,17 @@ export default function RightSidebar({
     });
   }
 
-  function updateFigureTitle(title) {
+  function patchFigure(patch) {
     if (!activeFigure) return;
 
     onUpdateFigure(activeFigure.id, {
       ...activeFigure,
-      title,
+      ...patch,
     });
+  }
+
+  function updateFigureTitle(title) {
+    patchFigure({ title });
   }
 
   function updateSelectedObject(patch) {
@@ -86,7 +121,6 @@ export default function RightSidebar({
     if (!activeFigure) return;
 
     const points = objects.filter((object) => object.type === "point");
-
     if (points.length < 2) return;
 
     const segment = createSegment(points[points.length - 2].id, points[points.length - 1].id, "");
@@ -103,7 +137,6 @@ export default function RightSidebar({
     if (!activeFigure) return;
 
     const points = objects.filter((object) => object.type === "point");
-
     if (points.length < 2) return;
 
     const circle = createCircle(points[points.length - 2].id, points[points.length - 1].id, "");
@@ -114,6 +147,209 @@ export default function RightSidebar({
       selectedObjectId: circle.id,
       tool: "select",
     });
+  }
+
+  function addRightAngleQuick() {
+    if (!activeFigure) return;
+
+    const points = objects.filter((object) => object.type === "point");
+    if (points.length < 3) return;
+
+    const selectedPoint = selectedObject?.type === "point" ? selectedObject : points[0];
+    const others = points.filter((point) => point.id !== selectedPoint.id).slice(0, 2);
+
+    if (others.length < 2) return;
+
+    const right = createRightAngle(selectedPoint.id, others[0].id, others[1].id);
+
+    onUpdateFigure(activeFigure.id, {
+      ...activeFigure,
+      objects: [...objects, right],
+      selectedObjectId: right.id,
+      tool: "select",
+    });
+  }
+
+  function deleteSelectedObject() {
+    if (!activeFigure?.selectedObjectId) return;
+
+    onUpdateFigure(activeFigure.id, {
+      ...activeFigure,
+      objects: deleteObjectAndDependents(objects, activeFigure.selectedObjectId),
+      selectedObjectId: null,
+      pendingPointId: null,
+    });
+  }
+
+  function clearFigure() {
+    if (!activeFigure) return;
+
+    onUpdateFigure(activeFigure.id, {
+      ...activeFigure,
+      objects: [],
+      selectedObjectId: null,
+      pendingPointId: null,
+    });
+  }
+
+  function selectObject(objectId) {
+    if (!activeFigure) return;
+
+    onUpdateFigure(activeFigure.id, {
+      ...activeFigure,
+      selectedObjectId: objectId,
+      pendingPointId: null,
+    });
+  }
+
+  if (activeFigure) {
+    return (
+      <aside className="rightbar">
+        <div className="inspector-head">
+          <button type="button" className="back-panel-btn" onClick={onDeselectFigure}>
+            ← Soạn bài
+          </button>
+          <b>Bảng hình học</b>
+        </div>
+
+        <label className="field-label">
+          Tên khung hình
+          <input value={activeFigure.title || ""} onChange={(event) => updateFigureTitle(event.target.value)} />
+        </label>
+
+        <div className="figure-list compact-list">
+          {(figures || []).map((figure, index) => (
+            <button
+              type="button"
+              key={figure.id}
+              className={`figure-item ${activeFigure?.id === figure.id ? "active" : ""}`}
+              onClick={() => onSelectFigure(figure.id)}
+            >
+              <Triangle size={15} />
+              {figure.title || `Hình ${index + 1}`}
+            </button>
+          ))}
+        </div>
+
+        <div className="geometry-tools">
+          <button className={activeFigure.tool === "select" ? "active" : ""} onClick={() => setTool("select")}>
+            <MousePointer2 size={15} /> Chọn
+          </button>
+          <button className={activeFigure.tool === "point" ? "active" : ""} onClick={() => setTool("point")}>
+            <Circle size={15} /> Điểm
+          </button>
+          <button className={activeFigure.tool === "segment" ? "active" : ""} onClick={() => setTool("segment")}>
+            <PenLine size={15} /> Đoạn
+          </button>
+          <button className={activeFigure.tool === "circle" ? "active" : ""} onClick={() => setTool("circle")}>
+            <Circle size={15} /> Tròn
+          </button>
+          <button className={activeFigure.tool === "pen" ? "active" : ""} onClick={() => setTool("pen")}>
+            <PenLine size={15} /> Vẽ tay
+          </button>
+        </div>
+
+        <div className="geometry-actions">
+          <button type="button" onClick={addPointQuick}>+ Điểm nhanh</button>
+          <button type="button" onClick={addSegmentQuick}>+ Nối 2 điểm cuối</button>
+          <button type="button" onClick={addCircleQuick}>+ Tròn 2 điểm cuối</button>
+          <button type="button" onClick={addRightAngleQuick}>+ Ký hiệu góc vuông</button>
+          <button type="button" onClick={addTrianglePreset}>+ Tam giác 3-4-5</button>
+        </div>
+
+        <div className="geometry-display-options">
+          <button
+            type="button"
+            className={activeFigure.showGrid ? "active" : ""}
+            onClick={() => patchFigure({ showGrid: !activeFigure.showGrid })}
+          >
+            <Grid3X3 size={15} />
+            Lưới hình này
+          </button>
+          <button
+            type="button"
+            className={activeFigure.showAxis ? "active" : ""}
+            onClick={() => patchFigure({ showAxis: !activeFigure.showAxis })}
+          >
+            Trục hình này
+          </button>
+        </div>
+
+        <div className="object-panel">
+          <b>Đối tượng trong hình</b>
+
+          {objects.length === 0 && (
+            <p>Khung đang trống. Chọn công cụ rồi vẽ vào khung.</p>
+          )}
+
+          <div className="object-list">
+            {objects.map((object) => (
+              <button
+                type="button"
+                key={object.id}
+                className={`object-item ${object.id === activeFigure.selectedObjectId ? "active" : ""}`}
+                onClick={() => selectObject(object.id)}
+              >
+                <span>{objectKindName(object.type)}</span>
+                <small>{objectLabel(objects, object)}</small>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {selectedObject && (
+          <div className="selected-object-card">
+            <b>Đang chọn: {objectLabel(objects, selectedObject)}</b>
+
+            {selectedObject.type === "point" && (
+              <label className="field-label">
+                Tên điểm
+                <input value={selectedObject.label || ""} onChange={(event) => updateSelectedObject({ label: event.target.value })} />
+              </label>
+            )}
+
+            {selectedObject.type === "segment" && (
+              <>
+                <label className="field-label">
+                  Độ dài/nhãn hiển thị trên cạnh
+                  <input
+                    value={selectedObject.label || ""}
+                    placeholder="VD: 3cm, x, AB = 5"
+                    onChange={(event) => updateSelectedObject({ label: event.target.value })}
+                  />
+                </label>
+
+                <div className="measure-note">
+                  Độ dài theo hình: {measureSegment(objects, selectedObject).toFixed(1)} px
+                </div>
+              </>
+            )}
+
+            {selectedObject.type === "circle" && (
+              <label className="field-label">
+                Nhãn đường tròn
+                <input value={selectedObject.label || ""} onChange={(event) => updateSelectedObject({ label: event.target.value })} />
+              </label>
+            )}
+
+            <button type="button" className="danger-action" onClick={deleteSelectedObject}>
+              <Trash2 size={15} />
+              Xóa đối tượng đang chọn
+            </button>
+          </div>
+        )}
+
+        <button type="button" className="danger-action" onClick={() => onDeleteFigure(activeFigure.id)}>
+          <Trash2 size={15} />
+          Xóa cả khung hình
+        </button>
+
+        <button type="button" className="soft-action" onClick={clearFigure}>
+          <Eraser size={15} />
+          Xóa hết trong khung
+        </button>
+      </aside>
+    );
   }
 
   return (
@@ -138,7 +374,7 @@ export default function RightSidebar({
         </div>
       </details>
 
-      <details className="side-group">
+      <details open className="side-group">
         <summary>
           <Braces size={17} />
           <b>Công thức mẫu</b>
@@ -158,7 +394,7 @@ export default function RightSidebar({
         </div>
       </details>
 
-      <details className="side-group">
+      <details open className="side-group">
         <summary>
           <Sparkles size={17} />
           <b>Mẫu bài</b>
@@ -176,106 +412,6 @@ export default function RightSidebar({
             </button>
           ))}
         </div>
-      </details>
-
-      <details open className="side-group">
-        <summary>
-          <Triangle size={17} />
-          <b>Hình học</b>
-        </summary>
-
-        <div className="figure-list">
-          {(figures || []).map((figure, index) => (
-            <button
-              type="button"
-              key={figure.id}
-              className={`figure-item ${activeFigure?.id === figure.id ? "active" : ""}`}
-              onClick={() => onSelectFigure(figure.id)}
-            >
-              <Triangle size={15} />
-              {figure.title || `Hình ${index + 1}`}
-            </button>
-          ))}
-        </div>
-
-        {!activeFigure && (
-          <div className="empty-panel">
-            Bấm <b>Thêm hình</b> ở thanh trên để tạo khung hình trống.
-          </div>
-        )}
-
-        {activeFigure && (
-          <>
-            <label className="field-label">
-              Tên khung hình
-              <input value={activeFigure.title || ""} onChange={(event) => updateFigureTitle(event.target.value)} />
-            </label>
-
-            <div className="geometry-tools">
-              <button className={activeFigure.tool === "select" ? "active" : ""} onClick={() => setTool("select")}>
-                <MousePointer2 size={15} /> Chọn
-              </button>
-              <button className={activeFigure.tool === "point" ? "active" : ""} onClick={() => setTool("point")}>
-                <Circle size={15} /> Điểm
-              </button>
-              <button className={activeFigure.tool === "segment" ? "active" : ""} onClick={() => setTool("segment")}>
-                <PenLine size={15} /> Đoạn
-              </button>
-              <button className={activeFigure.tool === "circle" ? "active" : ""} onClick={() => setTool("circle")}>
-                <Circle size={15} /> Tròn
-              </button>
-            </div>
-
-            <div className="geometry-actions">
-              <button type="button" onClick={addPointQuick}>+ Điểm nhanh</button>
-              <button type="button" onClick={addSegmentQuick}>+ Nối 2 điểm cuối</button>
-              <button type="button" onClick={addCircleQuick}>+ Tròn 2 điểm cuối</button>
-              <button type="button" onClick={addTrianglePreset}>+ Tam giác 3-4-5</button>
-            </div>
-
-            {selectedObject && (
-              <div className="selected-object-card">
-                <b>Đang chọn: {selectedObject.type}</b>
-
-                {selectedObject.type === "point" && (
-                  <label className="field-label">
-                    Tên điểm
-                    <input value={selectedObject.label || ""} onChange={(event) => updateSelectedObject({ label: event.target.value })} />
-                  </label>
-                )}
-
-                {selectedObject.type === "segment" && (
-                  <label className="field-label">
-                    Nhãn cạnh/đoạn
-                    <input value={selectedObject.label || ""} onChange={(event) => updateSelectedObject({ label: event.target.value })} />
-                  </label>
-                )}
-
-                {selectedObject.type === "circle" && (
-                  <label className="field-label">
-                    Nhãn đường tròn
-                    <input value={selectedObject.label || ""} onChange={(event) => updateSelectedObject({ label: event.target.value })} />
-                  </label>
-                )}
-
-                <button type="button" className="danger-action" onClick={onDeleteSelectedObject}>
-                  <Trash2 size={15} />
-                  Xóa đối tượng đang chọn
-                </button>
-              </div>
-            )}
-
-            <button type="button" className="danger-action" onClick={() => onDeleteFigure(activeFigure.id)}>
-              <Trash2 size={15} />
-              Xóa cả khung hình
-            </button>
-
-            <button type="button" className="soft-action" onClick={onClearFigure}>
-              <Eraser size={15} />
-              Xóa hết trong khung
-            </button>
-          </>
-        )}
       </details>
     </aside>
   );

@@ -16,13 +16,13 @@ export default function DocumentPage({
   editorRef,
   activeTool,
   rememberSelection,
-  showGrid,
-  showAxis,
   onSelectPage,
+  onDeselectFigure,
   onUpdatePageHtml,
   onUpdateFigure,
   onUpdateFigureBox,
   onSelectFigure,
+  onDeleteFigure,
   setActiveTool,
   setStatus,
   onInsertSmartFormula,
@@ -176,6 +176,7 @@ export default function DocumentPage({
                     handleCleanPaste(event, editorRef.current);
                     setTimeout(syncHtml, 0);
                   }}
+                  onMouseDown={() => onDeselectFigure(page.id)}
                   onMouseUp={rememberSelection}
                   onKeyUp={rememberSelection}
                   onKeyDown={handleEditorKeyDown}
@@ -223,8 +224,8 @@ export default function DocumentPage({
                     <div className="figure-content">
                       <GeometryCanvas
                         figure={figure}
-                        showGrid={showGrid}
-                        showAxis={showAxis}
+                        isActive={selected}
+                        onDeleteFigure={() => onDeleteFigure(page.id, figure.id)}
                         onChange={(nextFigure) => onUpdateFigure(page.id, figure.id, nextFigure)}
                       />
                     </div>

@@ -1,5 +1,7 @@
-const W = 640;
-const H = 360;
+export const GEOMETRY_SIZE = {
+  W: 640,
+  H: 360,
+};
 
 function uid(prefix = "id") {
   return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -47,6 +49,14 @@ export function createRightAngle(at, p1, p2) {
   };
 }
 
+export function createStroke(points = []) {
+  return {
+    id: uid("stroke"),
+    type: "stroke",
+    points,
+  };
+}
+
 export function createTrianglePreset() {
   const A = createPoint("A", 150, 265);
   const B = createPoint("B", 390, 265);
@@ -71,9 +81,11 @@ export function createFigure(index = 1) {
     tool: "select",
     selectedObjectId: null,
     pendingPointId: null,
+    showGrid: true,
+    showAxis: false,
     box: {
-      x: 96 + (index - 1) * 22,
-      y: 560 + (index - 1) * 22,
+      x: 90 + (index - 1) * 24,
+      y: 560 + (index - 1) * 24,
       width: 460,
       height: 280,
     },
@@ -101,7 +113,13 @@ export function ensureFigureGeometry(figure, index = 1) {
   if (!figure) return createFigure(index);
 
   if (figure.type === "geometry" && Array.isArray(figure.objects)) {
-    return figure;
+    return {
+      ...createFigure(index),
+      ...figure,
+      showGrid: typeof figure.showGrid === "boolean" ? figure.showGrid : true,
+      showAxis: typeof figure.showAxis === "boolean" ? figure.showAxis : false,
+      objects: figure.objects,
+    };
   }
 
   const converted = createFigure(index);
@@ -124,7 +142,7 @@ export function ensurePageFigures(page) {
   if (Array.isArray(page.figures)) {
     return {
       ...page,
-      figures: page.figures.map(ensureFigureGeometry),
+      figures: page.figures.map((figure, index) => ensureFigureGeometry(figure, index + 1)),
     };
   }
 
@@ -141,12 +159,26 @@ export function ensurePageFigures(page) {
   return {
     ...page,
     figures,
-    selectedFigureId: figures[0]?.id || null,
+    selectedFigureId: null,
   };
 }
 
 export function getPoint(objects, id) {
   return objects.find((object) => object.id === id && object.type === "point");
+}
+
+export function distance(a, b) {
+  if (!a || !b) return 0;
+  return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+export function measureSegment(objects, segment) {
+  if (!segment || segment.type !== "segment") return 0;
+
+  const a = getPoint(objects, segment.from);
+  const b = getPoint(objects, segment.to);
+
+  return distance(a, b);
 }
 
 export function nextPointLabel(objects = []) {
@@ -161,4 +193,35 @@ export function nextPointLabel(objects = []) {
   return letters.find((letter) => !used.has(letter)) || `P${used.size + 1}`;
 }
 
-export const GEOMETRY_SIZE = { W, H };
+export function deleteObjectAndDependents(objects = [], objectId) {
+  const target = objects.find((object) => object.id === objectId);
+  if (!target) return objects;
+
+  return objects.filter((object) => {
+    if (object.id === objectId) return false;
+
+    if (target.type === "point") {
+      if (object.type === "segment") return object.from !== objectId && object.to !== objectId;
+      if (object.type === "circle") return object.center !== objectId && object.through !== objectId;
+      if (object.type === "rightAngle") return object.at !== objectId && object.p1 !== objectId && object.p2 !== objectId;
+    }
+
+    return true;
+  });
+}
+
+export function objectLabel(objects = [], object) {
+  if (!object) return "Đối tượng";
+
+  if (object.type === "point") return `Điểm ${object.label || ""}`;
+  if (object.type === "segment") {
+    const a = getPoint(objects, object.from);
+    const b = getPoint(objects, object.to);
+    return `Đoạn ${a?.label || "?"}${b?.label || "?"}${object.label ? ` = ${object.label}` : ""}`;
+  }
+  if (object.type === "circle") return `Đường tròn${object.label ? ` ${object.label}` : ""}`;
+  if (object.type === "rightAngle") return "Ký hiệu góc vuông";
+  if (object.type === "stroke") return "Nét vẽ tay";
+
+  return "Đối tượng";
+}

@@ -5,8 +5,6 @@ import {
   Bold,
   BoxSelect,
   BrushCleaning,
-  Crosshair,
-  Grid3X3,
   Highlighter,
   Italic,
   MousePointer2,
@@ -23,10 +21,6 @@ import { IconButton, ToolButton } from "../common/Buttons";
 export default function Toolbar({
   activeTool,
   setActiveTool,
-  showGrid,
-  setShowGrid,
-  showAxis,
-  setShowAxis,
   onBold,
   onItalic,
   onUnderline,
@@ -37,6 +31,7 @@ export default function Toolbar({
   onMath,
   onTextBox,
   onAddFigure,
+  onDraw,
   onCleanFormat,
 }) {
   return (
@@ -47,7 +42,7 @@ export default function Toolbar({
         <ToolButton active={activeTool === "select"} icon={MousePointer2} label="Chọn" onClick={() => setActiveTool("select")} />
         <ToolButton active={activeTool === "textbox"} icon={BoxSelect} label="Khung chữ" onClick={onTextBox} />
         <ToolButton active={activeTool === "shape"} icon={Triangle} label="Thêm hình" onClick={onAddFigure} />
-        <ToolButton active={activeTool === "draw"} icon={PenLine} label="Vẽ tay" onClick={() => setActiveTool("draw")} />
+        <ToolButton active={activeTool === "draw"} icon={PenLine} label="Vẽ tay" onClick={onDraw} />
       </div>
 
       <div className="format-row">
@@ -64,12 +59,6 @@ export default function Toolbar({
 
         <span className="divider" />
 
-        <IconButton active={showGrid} title="Bật/tắt lưới hình" onClick={() => setShowGrid(!showGrid)}>
-          <Grid3X3 size={17} /> Lưới
-        </IconButton>
-        <IconButton active={showAxis} title="Bật/tắt trục tọa độ" onClick={() => setShowAxis(!showAxis)}>
-          <Crosshair size={17} /> Trục
-        </IconButton>
         <IconButton title="Thêm khung hình mới" onClick={onAddFigure}>
           <Plus size={17} /> Hình
         </IconButton>
