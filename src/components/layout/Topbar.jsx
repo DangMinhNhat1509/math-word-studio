@@ -1,8 +1,8 @@
-import { Copy, Download, Save, Sigma } from "lucide-react";
+import { Sigma } from "lucide-react";
 
-export default function Topbar({ onUndo, onRedo, onSave, onCopyText, onPrint }) {
+export default function Topbar() {
   return (
-    <header className="topbar">
+    <header className="topbar slim-topbar">
       <div className="brand">
         <div className="logo">
           <Sigma size={22} />
@@ -17,21 +17,10 @@ export default function Topbar({ onUndo, onRedo, onSave, onCopyText, onPrint }) 
         </div>
       </div>
 
-      <div className="top-actions">
-        <button type="button" onClick={onUndo}>↶ Hoàn tác</button>
-        <button type="button" onClick={onRedo}>↷ Làm lại</button>
-        <button type="button" onClick={onSave}>
-          <Save size={16} />
-          Lưu
-        </button>
-        <button type="button" onClick={onCopyText}>
-          <Copy size={16} />
-          Copy chữ
-        </button>
-        <button type="button" className="primary" onClick={onPrint}>
-          <Download size={16} />
-          In/PDF
-        </button>
+      <div className="shortcut-bar" aria-label="Phím tắt nhanh">
+        <span><kbd>Ctrl</kbd> + <kbd>S</kbd> Lưu</span>
+        <span><kbd>Ctrl</kbd> + <kbd>P</kbd> In/PDF</span>
+        <span><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>C</kbd> Copy chữ</span>
       </div>
     </header>
   );

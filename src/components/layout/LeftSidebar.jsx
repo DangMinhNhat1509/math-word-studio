@@ -1,14 +1,8 @@
 import {
-  Copy,
   FilePlus2,
   Layers,
-  Printer,
-  RotateCcw,
-  Save,
   Trash2,
 } from "lucide-react";
-
-import { SideButton } from "../common/Buttons";
 
 function stripText(html = "") {
   const div = document.createElement("div");
@@ -24,11 +18,6 @@ export default function LeftSidebar({
   onSelectPage,
   onAddPage,
   onDeletePage,
-  onSave,
-  onCopyText,
-  onCopyHtml,
-  onPrint,
-  onReset,
 }) {
   return (
     <aside className="leftbar">
@@ -84,18 +73,18 @@ export default function LeftSidebar({
         Xóa trang hiện tại
       </button>
 
-      <div className="sidebar-section compact-section">
-        <SideButton icon={Save} label="Lưu" onClick={onSave} />
-        <SideButton icon={Copy} label="Copy chữ" onClick={onCopyText} />
-        <SideButton icon={Copy} label="Copy HTML" onClick={onCopyHtml} />
-        <SideButton icon={Printer} label="In/PDF" onClick={onPrint} />
-        <SideButton danger icon={RotateCcw} label="Reset" onClick={onReset} />
-      </div>
-
       <div className="status-card">
         <b>Trạng thái</b>
         <p>{status}</p>
         {savedAt && <small>Lưu lần cuối: {savedAt}</small>}
+      </div>
+
+      <div className="shortcut-card">
+        <b>Phím tắt</b>
+        <p><kbd>Ctrl</kbd> + <kbd>S</kbd> Lưu tài liệu</p>
+        <p><kbd>Ctrl</kbd> + <kbd>P</kbd> In/PDF</p>
+        <p><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>C</kbd> Copy chữ</p>
+        <p><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>F</kbd> Dọn format</p>
       </div>
     </aside>
   );

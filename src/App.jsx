@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import { SYMBOLS, FORMULAS, TEMPLATES } from "./data/mathData";
 import { useEditorSelection } from "./hooks/useEditorSelection";
@@ -142,19 +142,64 @@ export default function App() {
     printPdf({ saveDocument: () => {} });
   }
 
+
+  function isEditableShortcutTarget(target) {
+    if (!target) return false;
+
+    const tag = target.tagName;
+
+    return (
+      tag === "INPUT" ||
+      tag === "TEXTAREA" ||
+      tag === "MATH-FIELD" ||
+      target.isContentEditable ||
+      target.closest?.("[contenteditable='true']")
+    );
+  }
+
+  useEffect(() => {
+    function handleGlobalShortcuts(event) {
+      const key = event.key.toLowerCase();
+
+      if ((event.ctrlKey || event.metaKey) && key === "s") {
+        event.preventDefault();
+        saveDocument();
+        return;
+      }
+
+      if ((event.ctrlKey || event.metaKey) && key === "p") {
+        event.preventDefault();
+        handlePrint();
+        return;
+      }
+
+      if ((event.ctrlKey || event.metaKey) && event.shiftKey && key === "c") {
+        event.preventDefault();
+        handleCopyText();
+        return;
+      }
+
+      if ((event.ctrlKey || event.metaKey) && event.shiftKey && key === "f") {
+        event.preventDefault();
+
+        if (!isEditableShortcutTarget(event.target) || editorRef.current?.contains(event.target)) {
+          cleanFormat();
+        }
+      }
+    }
+
+    window.addEventListener("keydown", handleGlobalShortcuts);
+
+    return () => window.removeEventListener("keydown", handleGlobalShortcuts);
+  });
+
   if (!currentPage) {
     return <div className="app">Đang tải tài liệu...</div>;
   }
 
   return (
     <div className="app">
-      <Topbar
-        onUndo={() => runCommand("undo")}
-        onRedo={() => runCommand("redo")}
-        onSave={saveDocument}
-        onCopyText={handleCopyText}
-        onPrint={handlePrint}
-      />
+      <Topbar />
 
       <div className="layout">
         <LeftSidebar
