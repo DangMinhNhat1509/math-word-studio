@@ -1,17 +1,24 @@
 import React, { useEffect, useRef, useState } from "react";
+
 import { SYMBOLS, FORMULAS, TEMPLATES } from "./data/mathData";
 import { DEFAULT_DIAGRAM } from "./data/defaultDocument";
+
 import { useEditorSelection } from "./hooks/useEditorSelection";
+
 import { copyHtml, copyPlainText, insertHtmlToEditor, printPdf, runCommand } from "./utils/editorCommands";
 import { loadDocument, resetDocument, saveDocumentToBrowser } from "./utils/documentStorage";
+import { renderFormulaBlock } from "./utils/mathFormatter";
+
 import Topbar from "./components/layout/Topbar";
 import LeftSidebar from "./components/layout/LeftSidebar";
 import Toolbar from "./components/layout/Toolbar";
 import RightSidebar from "./components/layout/RightSidebar";
+
 import DocumentPage from "./components/editor/DocumentPage";
 
 export default function App() {
   const editorRef = useRef(null);
+
   const { rememberSelection, restoreSelection } = useEditorSelection(editorRef);
 
   const [activeTool, setActiveTool] = useState("text");
@@ -33,8 +40,12 @@ export default function App() {
       restoreSelection,
       rememberSelection,
       setStatus,
-      message
+      message,
     });
+  }
+
+  function insertSmartFormula(value) {
+    insertHtml(renderFormulaBlock(value), "Đã chèn công thức chuẩn");
   }
 
   function saveDocument() {
@@ -42,7 +53,7 @@ export default function App() {
       editorRef,
       diagram,
       setSavedAt,
-      setStatus
+      setStatus,
     });
   }
 
@@ -51,7 +62,7 @@ export default function App() {
       editorRef,
       showDiagram,
       diagram,
-      setStatus
+      setStatus,
     });
   }
 
@@ -109,6 +120,7 @@ export default function App() {
 
           <DocumentPage
             editorRef={editorRef}
+            activeTool={activeTool}
             rememberSelection={rememberSelection}
             showDiagram={showDiagram}
             showGrid={showGrid}
@@ -117,6 +129,7 @@ export default function App() {
             setDiagram={setDiagram}
             setActiveTool={setActiveTool}
             setStatus={setStatus}
+            onInsertSmartFormula={insertSmartFormula}
           />
         </main>
 
@@ -127,7 +140,7 @@ export default function App() {
           diagram={diagram}
           setDiagram={setDiagram}
           onInsertSymbol={(symbol) => insertHtml(`<span class="math-symbol">${symbol}</span>`, `Đã chèn ${symbol}`)}
-          onInsertFormula={(formula) => insertHtml(`<div class="formula-line">${formula}</div>`, "Đã chèn công thức")}
+          onInsertFormula={(formula) => insertSmartFormula(formula)}
           onInsertTemplate={(template) => insertHtml(template.html, `Đã chèn mẫu: ${template.name}`)}
         />
       </div>
