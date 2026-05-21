@@ -1,0 +1,125 @@
+.workspace {
+  padding: 26px;
+  background:
+    radial-gradient(circle at 12% 10%, rgba(148, 163, 184, 0.22), transparent 26%),
+    var(--bg);
+  min-height: calc(100vh - 180px);
+}
+
+.paper {
+  width: 794px;
+  min-height: 1120px;
+  margin: 0 auto 80px;
+  background: white;
+  border-radius: 30px;
+  padding: 56px;
+  box-shadow: var(--shadow);
+}
+
+.paper-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 18px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.kicker {
+  color: var(--muted2);
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.28em;
+  font-weight: 900;
+}
+
+.paper h1 {
+  margin: 8px 0 0;
+  font-size: 32px;
+  letter-spacing: -0.04em;
+}
+
+.paper-meta {
+  align-self: flex-start;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  border-radius: 16px;
+  padding: 9px 12px;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.edit-hint {
+  margin-bottom: 14px;
+  border: 1px dashed var(--line2);
+  background: var(--soft);
+  border-radius: 16px;
+  color: var(--muted);
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.editor {
+  min-height: 430px;
+  outline: none;
+  font-size: 17px;
+  line-height: 1.78;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: white;
+}
+
+.editor:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.07);
+}
+
+.editor h2 {
+  font-size: 24px;
+  margin: 0 0 12px;
+}
+
+.editor p {
+  margin: 0 0 14px;
+}
+
+.formula-line {
+  margin: 12px 0 16px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 850;
+  line-height: 1.4;
+}
+
+.math-symbol {
+  display: inline-flex;
+  padding: 0 4px;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.highlight {
+  border-radius: 8px;
+  padding: 1px 6px;
+  background: var(--amberSoft);
+  color: var(--amber);
+  font-weight: 900;
+}
+
+.paper-note {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #166534;
+  background: #f0fdf4;
+  border-radius: 18px;
+  padding: 12px 14px;
+  font-size: 14px;
+  font-weight: 750;
+}
