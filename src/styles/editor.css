@@ -1,12 +1,16 @@
 .workspace {
-  padding: 24px 28px 80px;
+  padding: 24px 28px 90px;
   background: #e9edf3;
-  min-height: calc(100vh - 160px);
+  min-height: calc(100vh - 150px);
+}
+
+.page-shell {
+  margin-bottom: 26px;
 }
 
 .page-toolbar {
   width: 794px;
-  margin: 0 auto 10px;
+  margin: 0 auto 8px;
   display: flex;
   justify-content: space-between;
   gap: 12px;
@@ -18,7 +22,7 @@
 .paper {
   width: 794px;
   min-height: 1123px;
-  margin: 0 auto 80px;
+  margin: 0 auto;
   padding: 72px 70px;
   background: white;
   border-radius: 2px;
@@ -26,6 +30,10 @@
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
   position: relative;
   overflow: hidden;
+}
+
+.paper.active-paper {
+  outline: 2px solid rgba(15, 23, 42, 0.08);
 }
 
 .editor {
@@ -39,6 +47,10 @@
   background: transparent;
   position: relative;
   z-index: 2;
+}
+
+.readonly-editor {
+  pointer-events: none;
 }
 
 .editor:focus {
@@ -110,10 +122,6 @@
   vertical-align: top;
 }
 
-.paper-note {
-  display: none;
-}
-
 .figure-box {
   position: absolute;
   z-index: 4;
@@ -121,14 +129,15 @@
   border: 1px dashed transparent;
 }
 
-.figure-box:hover {
-  border-color: #94a3b8;
+.figure-box:hover,
+.figure-box.selected {
+  border-color: #0f172a;
 }
 
 .figure-toolbar {
   position: absolute;
   left: 0;
-  top: -28px;
+  top: -27px;
   height: 26px;
   padding: 0 8px;
   border: 1px solid #cbd5e1;
@@ -150,7 +159,8 @@
   font-weight: 700;
 }
 
-.figure-box:hover .figure-toolbar {
+.figure-box:hover .figure-toolbar,
+.figure-box.selected .figure-toolbar {
   opacity: 1;
 }
 
@@ -171,8 +181,13 @@
   opacity: 0;
 }
 
-.figure-box:hover .figure-resize {
+.figure-box:hover .figure-resize,
+.figure-box.selected .figure-resize {
   opacity: 1;
+}
+
+.editor *::selection {
+  background: rgba(148, 163, 184, 0.18);
 }
 
 @media print {
@@ -197,17 +212,4 @@
     border-radius: 0;
     page-break-after: always;
   }
-}
-
-.figure-box.selected {
-  border-color: #0f172a;
-}
-
-.figure-box.selected .figure-toolbar,
-.figure-box.selected .figure-resize {
-  opacity: 1;
-}
-
-.editor *::selection {
-  background: rgba(148, 163, 184, 0.25);
 }

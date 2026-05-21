@@ -1,7 +1,7 @@
 import { DEFAULT_HTML } from "../data/defaultDocument";
-import { createFigure, ensurePageFigures } from "./figures";
+import { ensurePageFigures } from "./figures";
 
-const PAGES_KEY = "mws_pages_v4";
+const PAGES_KEY = "mws_pages_v5";
 const SAVED_AT_KEY = "mws_saved_at";
 
 function makeId() {
@@ -10,14 +10,12 @@ function makeId() {
 }
 
 export function createBlankPage(index = 1, html = "<p><br></p>") {
-  const figure = createFigure(1);
-
   return {
     id: makeId(),
     title: `Trang ${index}`,
     html,
-    figures: [figure],
-    selectedFigureId: figure.id,
+    figures: [],
+    selectedFigureId: null,
   };
 }
 
@@ -31,13 +29,24 @@ export function getInitialPages() {
     }
   } catch {}
 
+  const oldKeys = ["mws_pages_v4", "mws_pages_v3"];
+
+  for (const key of oldKeys) {
+    try {
+      const raw = localStorage.getItem(key);
+      const parsed = raw ? JSON.parse(raw) : null;
+
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.map(ensurePageFigures);
+      }
+    } catch {}
+  }
+
   const oldHtml = localStorage.getItem("mws_document_html");
 
   return [
-    {
-      ...createBlankPage(1, oldHtml || DEFAULT_HTML),
-      title: "Trang 1",
-    },
+    createBlankPage(1, oldHtml || DEFAULT_HTML),
+    createBlankPage(2, "<p><br></p>"),
   ];
 }
 
@@ -57,6 +66,7 @@ export function savePagesToBrowser({ pages, setSavedAt, setStatus }) {
 
 export function resetPagesInBrowser() {
   localStorage.removeItem(PAGES_KEY);
+  localStorage.removeItem("mws_pages_v4");
   localStorage.removeItem("mws_pages_v3");
   localStorage.removeItem("mws_document_html");
   localStorage.removeItem("mws_diagram");

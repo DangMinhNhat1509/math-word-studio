@@ -19,18 +19,21 @@ math-field.mws-math {
   line-height: 1.15;
   vertical-align: baseline;
   box-shadow: none;
+  --contains-highlight-background-color: transparent;
+  --highlight-background-color: rgba(148, 163, 184, 0.12);
+  --selection-background-color: rgba(148, 163, 184, 0.12);
 }
 
 math-field.mws-math:focus,
 math-field.mws-math:focus-within {
-  background: rgba(248, 250, 252, 0.7);
-  outline: 1px solid #cbd5e1;
-  outline-offset: 2px;
+  background: rgba(248, 250, 252, 0.35);
+  outline: 1px solid rgba(148, 163, 184, 0.55);
+  outline-offset: 1px;
 }
 
 .mws-formula *::selection,
 math-field.mws-math::selection {
-  background: rgba(148, 163, 184, 0.25);
+  background: rgba(148, 163, 184, 0.12);
 }
 
 .editor .math-block,
@@ -69,13 +72,4 @@ math-field.mws-math::selection {
     outline: 0 !important;
     background: transparent !important;
   }
-}
-
-math-field.mws-math {
-  --contains-highlight-background-color: transparent;
-  --highlight-background-color: rgba(148, 163, 184, 0.18);
-}
-
-math-field.mws-math::selection {
-  background: rgba(148, 163, 184, 0.16);
 }

@@ -1,7 +1,6 @@
 import {
   Copy,
   FilePlus2,
-  FileText,
   Layers,
   Printer,
   RotateCcw,
@@ -35,7 +34,7 @@ export default function LeftSidebar({
     <aside className="leftbar">
       <div className="panel-title">
         <Layers size={17} />
-        <b>Trang tài liệu</b>
+        <b>Trang</b>
       </div>
 
       <div className="page-thumb-list">
@@ -50,14 +49,24 @@ export default function LeftSidebar({
               onClick={() => onSelectPage(page.id)}
             >
               <div className="page-thumb-paper">
-                <div className="thumb-line strong" />
-                <div className="thumb-line" />
-                <div className="thumb-line short" />
-                {page.figures?.length > 0 && <div className="thumb-figure" />}
+                <div
+                  className="page-mini-content"
+                  dangerouslySetInnerHTML={{ __html: page.html || "<p><br></p>" }}
+                />
+                {(page.figures || []).map((figure) => (
+                  <span
+                    key={figure.id}
+                    className="page-mini-figure"
+                    style={{
+                      left: `${Math.min(78, Math.max(2, (figure.box?.x || 0) / 8))}%`,
+                      top: `${Math.min(84, Math.max(8, (figure.box?.y || 0) / 12))}%`,
+                    }}
+                  />
+                ))}
               </div>
 
               <div className="page-thumb-meta">
-                <b>{page.title || `Trang ${index + 1}`}</b>
+                <b>Trang {index + 1}</b>
                 <span>{preview || "Trang trống"}</span>
               </div>
             </button>
@@ -75,12 +84,12 @@ export default function LeftSidebar({
         Xóa trang hiện tại
       </button>
 
-      <div className="sidebar-section">
-        <SideButton icon={Save} label="Lưu tài liệu" onClick={onSave} />
-        <SideButton icon={Copy} label="Copy chữ dán Word" onClick={onCopyText} />
+      <div className="sidebar-section compact-section">
+        <SideButton icon={Save} label="Lưu" onClick={onSave} />
+        <SideButton icon={Copy} label="Copy chữ" onClick={onCopyText} />
         <SideButton icon={Copy} label="Copy HTML" onClick={onCopyHtml} />
         <SideButton icon={Printer} label="In/PDF" onClick={onPrint} />
-        <SideButton danger icon={RotateCcw} label="Reset mẫu" onClick={onReset} />
+        <SideButton danger icon={RotateCcw} label="Reset" onClick={onReset} />
       </div>
 
       <div className="status-card">

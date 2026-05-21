@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
-
-import TriangleDiagram from "../geometry/TriangleDiagram";
+import GeometryCanvas from "../geometry/GeometryCanvas";
 
 import {
   autoConvertTypedMathAtCaret,
@@ -11,32 +10,32 @@ import {
 import { handleCleanPaste } from "../../utils/pasteCleaner";
 
 export default function DocumentPage({
-  page,
-  pageIndex,
+  pages,
+  currentPageId,
   pageCount,
   editorRef,
   activeTool,
   rememberSelection,
   showGrid,
   showAxis,
-  figures,
-  selectedFigureId,
-  setSelectedFigureId,
+  onSelectPage,
+  onUpdatePageHtml,
+  onUpdateFigure,
   onUpdateFigureBox,
-  onUpdateFigureDiagram,
+  onSelectFigure,
   setActiveTool,
   setStatus,
   onInsertSmartFormula,
-  onUpdateHtml,
 }) {
   const dragRef = useRef(null);
+  const activePage = pages.find((page) => page.id === currentPageId) || pages[0];
 
   useEffect(() => {
-    if (!editorRef.current || !page) return;
+    if (!editorRef.current || !activePage) return;
 
-    editorRef.current.innerHTML = page.html || "<p><br></p>";
+    editorRef.current.innerHTML = activePage.html || "<p><br></p>";
     prepareEditorMath(editorRef.current);
-  }, [page?.id, editorRef]);
+  }, [activePage?.id, editorRef]);
 
   useEffect(() => {
     function handleMove(event) {
@@ -49,7 +48,7 @@ export default function DocumentPage({
       const dy = event.clientY - drag.startY;
 
       if (drag.mode === "move") {
-        onUpdateFigureBox(drag.figureId, {
+        onUpdateFigureBox(drag.pageId, drag.figureId, {
           ...drag.startBox,
           x: Math.max(0, drag.startBox.x + dx),
           y: Math.max(0, drag.startBox.y + dy),
@@ -57,7 +56,7 @@ export default function DocumentPage({
       }
 
       if (drag.mode === "resize") {
-        onUpdateFigureBox(drag.figureId, {
+        onUpdateFigureBox(drag.pageId, drag.figureId, {
           ...drag.startBox,
           width: Math.max(220, drag.startBox.width + dx),
           height: Math.max(150, drag.startBox.height + dy),
@@ -79,7 +78,8 @@ export default function DocumentPage({
   }, [onUpdateFigureBox]);
 
   function syncHtml() {
-    onUpdateHtml(editorRef.current?.innerHTML || "");
+    if (!editorRef.current || !activePage) return;
+    onUpdatePageHtml(activePage.id, editorRef.current.innerHTML || "");
   }
 
   function handleEditorKeyDown(event) {
@@ -118,14 +118,16 @@ export default function DocumentPage({
     syncHtml();
   }
 
-  function startMove(event, figure) {
+  function startMove(event, pageId, figure) {
     event.preventDefault();
     event.stopPropagation();
 
-    setSelectedFigureId(figure.id);
+    onSelectPage(pageId);
+    onSelectFigure(pageId, figure.id);
 
     dragRef.current = {
       mode: "move",
+      pageId,
       figureId: figure.id,
       startX: event.clientX,
       startY: event.clientY,
@@ -133,14 +135,16 @@ export default function DocumentPage({
     };
   }
 
-  function startResize(event, figure) {
+  function startResize(event, pageId, figure) {
     event.preventDefault();
     event.stopPropagation();
 
-    setSelectedFigureId(figure.id);
+    onSelectPage(pageId);
+    onSelectFigure(pageId, figure.id);
 
     dragRef.current = {
       mode: "resize",
+      pageId,
       figureId: figure.id,
       startX: event.clientX,
       startY: event.clientY,
@@ -150,78 +154,89 @@ export default function DocumentPage({
 
   return (
     <div className="workspace">
-      <div className="page-toolbar">
-        <span>A4 · Trang {pageIndex + 1}/{pageCount}</span>
-        <span>Bấm Hình học để thêm hình mới. Click hình để sửa bên phải.</span>
-      </div>
+      {pages.map((page, pageIndex) => {
+        const isActive = page.id === currentPageId;
+        const selectedFigureId = page.selectedFigureId;
 
-      <section className="paper">
-        <div
-          ref={editorRef}
-          className={`editor ${activeTool === "math" ? "math-mode" : ""}`}
-          contentEditable
-          suppressContentEditableWarning
-          onPaste={(event) => {
-            handleCleanPaste(event, editorRef.current);
-            setTimeout(syncHtml, 0);
-          }}
-          onMouseUp={rememberSelection}
-          onKeyUp={rememberSelection}
-          onKeyDown={handleEditorKeyDown}
-          onFocus={(event) => {
-            if (event.target?.tagName !== "MATH-FIELD") {
-              setActiveTool("text");
-            }
-            rememberSelection();
-          }}
-          onBlur={syncHtml}
-          onInput={handleEditorInput}
-        />
-
-        {(figures || []).map((figure) => {
-          const selected = figure.id === selectedFigureId;
-          const box = figure.box || { x: 80, y: 520, width: 420, height: 260 };
-
-          return (
-            <div
-              key={figure.id}
-              className={`figure-box ${selected ? "selected" : ""}`}
-              style={{
-                left: `${box.x}px`,
-                top: `${box.y}px`,
-                width: `${box.width}px`,
-                height: `${box.height}px`,
-              }}
-              onPointerDown={(event) => {
-                event.stopPropagation();
-                setSelectedFigureId(figure.id);
-              }}
-            >
-              <div className="figure-toolbar" onPointerDown={(event) => startMove(event, figure)}>
-                <span>{figure.title || "Hình học"}</span>
-                <small>Kéo để di chuyển</small>
-              </div>
-
-              <div className="figure-content">
-                <TriangleDiagram
-                  diagram={figure.diagram}
-                  setDiagram={(nextDiagram) => {
-                    const oldDiagram = figure.diagram || {};
-                    onUpdateFigureDiagram(
-                      figure.id,
-                      typeof nextDiagram === "function" ? nextDiagram(oldDiagram) : nextDiagram
-                    );
-                  }}
-                  showGrid={showGrid}
-                  showAxis={showAxis}
-                />
-              </div>
-
-              <span className="figure-resize" onPointerDown={(event) => startResize(event, figure)} />
+        return (
+          <div key={page.id} className="page-shell" onMouseDown={() => onSelectPage(page.id)}>
+            <div className="page-toolbar">
+              <span>A4 · Trang {pageIndex + 1}/{pageCount}</span>
+              <span>{isActive ? "Đang sửa trang này" : "Bấm vào trang để sửa"}</span>
             </div>
-          );
-        })}
-      </section>
+
+            <section className={`paper ${isActive ? "active-paper" : ""}`}>
+              {isActive ? (
+                <div
+                  ref={editorRef}
+                  className={`editor ${activeTool === "math" ? "math-mode" : ""}`}
+                  contentEditable
+                  suppressContentEditableWarning
+                  onPaste={(event) => {
+                    handleCleanPaste(event, editorRef.current);
+                    setTimeout(syncHtml, 0);
+                  }}
+                  onMouseUp={rememberSelection}
+                  onKeyUp={rememberSelection}
+                  onKeyDown={handleEditorKeyDown}
+                  onFocus={(event) => {
+                    if (event.target?.tagName !== "MATH-FIELD") {
+                      setActiveTool("text");
+                    }
+                    rememberSelection();
+                  }}
+                  onBlur={syncHtml}
+                  onInput={handleEditorInput}
+                />
+              ) : (
+                <div
+                  className="editor readonly-editor"
+                  dangerouslySetInnerHTML={{ __html: page.html || "<p><br></p>" }}
+                />
+              )}
+
+              {(page.figures || []).map((figure) => {
+                const selected = isActive && figure.id === selectedFigureId;
+                const box = figure.box || { x: 80, y: 520, width: 420, height: 260 };
+
+                return (
+                  <div
+                    key={figure.id}
+                    className={`figure-box ${selected ? "selected" : ""}`}
+                    style={{
+                      left: `${box.x}px`,
+                      top: `${box.y}px`,
+                      width: `${box.width}px`,
+                      height: `${box.height}px`,
+                    }}
+                    onPointerDown={(event) => {
+                      event.stopPropagation();
+                      onSelectPage(page.id);
+                      onSelectFigure(page.id, figure.id);
+                    }}
+                  >
+                    <div className="figure-toolbar" onPointerDown={(event) => startMove(event, page.id, figure)}>
+                      <span>{figure.title || "Hình học"}</span>
+                      <small>Kéo để di chuyển</small>
+                    </div>
+
+                    <div className="figure-content">
+                      <GeometryCanvas
+                        figure={figure}
+                        showGrid={showGrid}
+                        showAxis={showAxis}
+                        onChange={(nextFigure) => onUpdateFigure(page.id, figure.id, nextFigure)}
+                      />
+                    </div>
+
+                    <span className="figure-resize" onPointerDown={(event) => startResize(event, page.id, figure)} />
+                  </div>
+                );
+              })}
+            </section>
+          </div>
+        );
+      })}
     </div>
   );
 }

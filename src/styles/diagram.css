@@ -1,8 +1,9 @@
+.geometry-canvas,
 .diagram {
   width: 100%;
   height: 100%;
-  min-width: 240px;
-  min-height: 160px;
+  min-width: 220px;
+  min-height: 150px;
   position: relative;
   overflow: hidden;
   margin: 0;
@@ -58,6 +59,7 @@
   top: 14px;
 }
 
+.geometry-svg,
 .diagram-svg {
   position: absolute;
   inset: 0;
@@ -67,66 +69,93 @@
   user-select: none;
 }
 
-.triangle-fill {
-  fill: rgba(148, 163, 184, 0.1);
-}
-
+.geo-segment,
 .triangle-edge {
   stroke: #0f172a;
   stroke-width: 3.2;
   stroke-linecap: round;
 }
 
+.geo-segment.selected,
+.geo-circle.selected,
+.geo-right-angle.selected {
+  stroke: #2563eb;
+}
+
+.geo-circle {
+  fill: transparent;
+  stroke: #0f172a;
+  stroke-width: 2.5;
+}
+
+.geo-right-angle,
 .right-angle-mark {
   fill: none;
   stroke: #0f172a;
-  stroke-width: 2.5;
+  stroke-width: 2.4;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.point-group {
+.geo-point-hit {
+  fill: transparent;
   cursor: grab;
 }
 
-.point-group:active {
-  cursor: grabbing;
-}
-
-.point-hit {
-  fill: transparent;
-}
-
-.point-dot {
+.geo-point {
   fill: #0f172a;
+  cursor: grab;
 }
 
-.point-label {
+.geo-point-group.selected .geo-point {
+  fill: #2563eb;
+}
+
+.geo-point-group.pending .geo-point {
+  fill: #f97316;
+}
+
+.geo-point-label,
+.geo-segment-label {
   fill: #0f172a;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 900;
+  cursor: grab;
+  user-select: none;
 }
 
-.side-label {
+.geo-segment-label {
   fill: #475569;
-  font-size: 18px;
-  font-weight: 800;
+  font-size: 17px;
 }
 
-.diagram-reset {
+.empty-geometry,
+.geometry-help {
   position: absolute;
-  right: 8px;
-  bottom: 8px;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
+  left: 12px;
+  bottom: 12px;
+  max-width: 85%;
+  border: 1px dashed #cbd5e1;
   background: rgba(255, 255, 255, 0.92);
-  color: #0f172a;
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: #64748b;
   font-size: 12px;
-  font-weight: 800;
-  padding: 6px 9px;
-  cursor: pointer;
+  line-height: 1.45;
 }
 
+.geometry-help {
+  border-style: solid;
+  color: #0f172a;
+}
+
+.triangle-fill,
+.point-group,
+.point-hit,
+.point-dot,
+.point-label,
+.side-label,
+.diagram-reset,
 .floating-editor,
 .mini-grid {
   display: none !important;
@@ -137,7 +166,8 @@
   .axis-x,
   .axis-y,
   .axis-label,
-  .diagram-reset {
+  .empty-geometry,
+  .geometry-help {
     display: none !important;
   }
 }

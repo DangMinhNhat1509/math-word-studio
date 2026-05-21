@@ -4,6 +4,7 @@ import {
   AlignRight,
   Bold,
   BoxSelect,
+  BrushCleaning,
   Crosshair,
   Grid3X3,
   Highlighter,
@@ -11,7 +12,6 @@ import {
   MousePointer2,
   PenLine,
   Plus,
-  Shapes,
   Sigma,
   Triangle,
   Type,
@@ -37,6 +37,7 @@ export default function Toolbar({
   onMath,
   onTextBox,
   onAddFigure,
+  onCleanFormat,
 }) {
   return (
     <div className="toolbar">
@@ -63,14 +64,17 @@ export default function Toolbar({
 
         <span className="divider" />
 
-        <IconButton active={showGrid} title="Bật/tắt lưới" onClick={() => setShowGrid(!showGrid)}>
+        <IconButton active={showGrid} title="Bật/tắt lưới hình" onClick={() => setShowGrid(!showGrid)}>
           <Grid3X3 size={17} /> Lưới
         </IconButton>
-        <IconButton active={showAxis} title="Bật/tắt trục" onClick={() => setShowAxis(!showAxis)}>
+        <IconButton active={showAxis} title="Bật/tắt trục tọa độ" onClick={() => setShowAxis(!showAxis)}>
           <Crosshair size={17} /> Trục
         </IconButton>
-        <IconButton title="Thêm hình mới" onClick={onAddFigure}>
-          <Plus size={17} /> Hình mới
+        <IconButton title="Thêm khung hình mới" onClick={onAddFigure}>
+          <Plus size={17} /> Hình
+        </IconButton>
+        <IconButton title="Dọn format nội dung đang soạn" onClick={onCleanFormat}>
+          <BrushCleaning size={17} /> Dọn format
         </IconButton>
       </div>
     </div>
