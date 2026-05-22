@@ -1,0 +1,180 @@
+.geometry-canvas,
+.diagram {
+  width: 100%;
+  height: 100%;
+  min-width: 220px;
+  min-height: 150px;
+  position: relative;
+  overflow: hidden;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.grid-layer {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(15, 23, 42, 0.055) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.055) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.axis-x,
+.axis-y {
+  position: absolute;
+  background: #cbd5e1;
+}
+
+.axis-x {
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+}
+
+.axis-y {
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+}
+
+.axis-label {
+  position: absolute;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.axis-label.x {
+  right: 18px;
+  top: calc(50% - 24px);
+}
+
+.axis-label.y {
+  left: calc(50% + 10px);
+  top: 14px;
+}
+
+.geometry-svg,
+.diagram-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  user-select: none;
+}
+
+.geo-segment {
+  stroke: #0f172a;
+  stroke-width: 3.2;
+  stroke-linecap: round;
+}
+
+.geo-segment.selected,
+.geo-circle.selected,
+.geo-right-angle.selected,
+.geo-stroke.selected {
+  stroke: #2563eb;
+}
+
+.geo-circle {
+  fill: transparent;
+  stroke: #0f172a;
+  stroke-width: 2.5;
+}
+
+.geo-stroke {
+  fill: none;
+  stroke: #0f172a;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.geo-right-angle {
+  fill: none;
+  stroke: #0f172a;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.geo-point-hit {
+  fill: transparent;
+  cursor: grab;
+}
+
+.geo-point {
+  fill: #0f172a;
+  cursor: grab;
+}
+
+.geo-point-group.selected .geo-point {
+  fill: #2563eb;
+}
+
+.geo-point-group.pending .geo-point {
+  fill: #f97316;
+}
+
+.geo-point-label,
+.geo-segment-label {
+  fill: #0f172a;
+  font-size: 20px;
+  font-weight: 900;
+  cursor: grab;
+  user-select: none;
+}
+
+.geo-segment-label {
+  fill: #475569;
+  font-size: 17px;
+}
+
+.empty-geometry,
+.geometry-help {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  max-width: 85%;
+  border: 1px dashed #cbd5e1;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.geometry-help {
+  border-style: solid;
+  color: #0f172a;
+}
+
+.triangle-fill,
+.point-group,
+.point-hit,
+.point-dot,
+.point-label,
+.side-label,
+.diagram-reset,
+.floating-editor,
+.mini-grid {
+  display: none !important;
+}
+
+@media print {
+  .grid-layer,
+  .axis-x,
+  .axis-y,
+  .axis-label,
+  .empty-geometry,
+  .geometry-help {
+    display: none !important;
+  }
+}

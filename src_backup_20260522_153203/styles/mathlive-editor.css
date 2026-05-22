@@ -1,0 +1,75 @@
+.mws-formula {
+  display: inline-flex;
+  align-items: baseline;
+  vertical-align: baseline;
+  margin: 0 2px;
+  max-width: 100%;
+}
+
+math-field.mws-math {
+  display: inline-block;
+  min-width: 1.1em;
+  max-width: 100%;
+  padding: 0 1px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #0f172a;
+  font-size: 1.06em;
+  line-height: 1.15;
+  vertical-align: baseline;
+  box-shadow: none;
+  --contains-highlight-background-color: transparent;
+  --highlight-background-color: rgba(148, 163, 184, 0.12);
+  --selection-background-color: rgba(148, 163, 184, 0.12);
+}
+
+math-field.mws-math:focus,
+math-field.mws-math:focus-within {
+  background: rgba(248, 250, 252, 0.35);
+  outline: 1px solid rgba(148, 163, 184, 0.55);
+  outline-offset: 1px;
+}
+
+.mws-formula *::selection,
+math-field.mws-math::selection {
+  background: rgba(148, 163, 184, 0.12);
+}
+
+.editor .math-block,
+.editor .formula-line {
+  display: inline !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  text-align: left !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  line-height: inherit !important;
+}
+
+.editor .math-block .katex-display,
+.editor .formula-line .katex-display {
+  display: inline !important;
+  margin: 0 !important;
+  text-align: left !important;
+}
+
+.editor .math-source {
+  display: none !important;
+}
+
+.editor math-field::part(virtual-keyboard-toggle),
+.editor math-field::part(menu-toggle) {
+  display: none;
+}
+
+@media print {
+  math-field.mws-math {
+    outline: 0 !important;
+    background: transparent !important;
+  }
+}
