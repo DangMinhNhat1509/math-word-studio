@@ -1,278 +1,1007 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { SYMBOLS, FORMULAS, TEMPLATES } from "./data/mathData";
-import { useEditorSelection } from "./hooks/useEditorSelection";
-import { useDocumentPages } from "./hooks/useDocumentPages";
-import { useGeometryEditor } from "./hooks/useGeometryEditor";
-import { getSavedAt } from "./utils/documentStorage";
+const PAGE_W = 794;
+const PAGE_H = 1123;
+const GRID = 25;
+const PX_PER_UNIT = 40;
 
-import {
-  copyHtml,
-  copyPlainText,
-  insertHtmlToEditor,
-  printPdf,
-  runCommand,
-} from "./utils/editorCommands";
+const uid = (prefix = "id") => `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
+const clone = (value) => {
+  if (typeof structuredClone === "function") return structuredClone(value);
+  return JSON.parse(JSON.stringify(value));
+};
+const trimHistory = (arr) => arr.slice(-80);
 
-import { insertInlineMathField } from "./utils/mathLiveEditor";
-import { cleanEditorFormat } from "./utils/pasteCleaner";
+function stripOuterParens(value) {
+  const s = String(value).trim();
+  if (s.startsWith("(") && s.endsWith(")")) return s.slice(1, -1);
+  return s;
+}
 
-import Topbar from "./components/layout/Topbar";
-import LeftSidebar from "./components/layout/LeftSidebar";
-import Toolbar from "./components/layout/Toolbar";
-import RightSidebar from "./components/layout/RightSidebar";
-import DocumentPage from "./components/editor/DocumentPage";
+function normalizeMath(raw = "") {
+  let s = String(raw).trim();
+  if (!s) return "";
 
-export default function App() {
-  const editorRef = useRef(null);
-  const { rememberSelection, restoreSelection } = useEditorSelection(editorRef);
+  s = s
+    .replace(/≤/g, "<=")
+    .replace(/≥/g, ">=")
+    .replace(/≠/g, "!=")
+    .replace(/Δ/g, "Delta")
+    .replace(/=>/g, "\\Rightarrow")
+    .replace(/->/g, "\\to")
+    .replace(/<=/g, "\\le")
+    .replace(/>=/g, "\\ge")
+    .replace(/!=/g, "\\ne")
+    .replace(/Delta/g, "\\Delta")
+    .replace(/sqrt\(([^)]+)\)/g, "\\sqrt{$1}")
+    .replace(/căn\s*\(([^)]+)\)/gi, "\\sqrt{$1}")
+    .replace(/\*/g, "\\cdot ");
 
-  const [activeTool, setActiveTool] = useState("text");
-  const [status, setStatus] = useState("Đã sẵn sàng");
-  const [savedAt, setSavedAt] = useState(() => getSavedAt());
-
-  const documentState = useDocumentPages(editorRef, setSavedAt, setStatus);
-
-  const {
-    pages,
-    currentPageId,
-    currentPage,
-    snapshotCurrentPage,
-    updatePage,
-    updateCurrentPage,
-    setPages,
-    selectPage,
-    addPage,
-    deleteCurrentPage,
-    saveDocument,
-    resetDocument,
-  } = documentState;
-
-  const geometry = useGeometryEditor({
-    pages,
-    currentPageId,
-    currentPage,
-    snapshotCurrentPage,
-    setPages,
-    updatePage,
-    updateCurrentPage,
-    setActiveTool,
-    setStatus,
-  });
-
-  const {
-    figures,
-    activeFigure,
-    addFigure,
-    selectFigure,
-    deselectFigure,
-    updateFigure,
-    updateActiveFigure,
-    updateFigureBox,
-    deleteFigure,
-    startDraw,
-    clearActiveFigure,
-  } = geometry;
-
-  function insertHtml(html, message) {
-    insertHtmlToEditor({
-      editorRef,
-      html,
-      restoreSelection,
-      rememberSelection,
-      setStatus,
-      message,
-    });
-
-    setTimeout(() => {
-      updateCurrentPage({
-        html: editorRef.current?.innerHTML || "",
-      });
-    }, 0);
-  }
-
-  function insertSmartFormula(value = "") {
-    setActiveTool("math");
-
-    insertInlineMathField({
-      editorRef,
-      restoreSelection,
-      rememberSelection,
-      setStatus,
-      value,
-    });
-
-    setTimeout(() => {
-      updateCurrentPage({
-        html: editorRef.current?.innerHTML || "",
-      });
-    }, 0);
-  }
-
-  function insertTextBox() {
-    setActiveTool("textbox");
-
-    insertHtml(
-      `<span class="word-textbox" contenteditable="true">Nhập nội dung khung...</span>&nbsp;`,
-      "Đã chèn khung chữ"
+  for (let i = 0; i < 3; i += 1) {
+    s = s.replace(
+      /(^|[\s=+\-])((?:\d+(?:[,.]\d+)?)|(?:[a-zA-Z]+)|(?:\([^()]+\)))\s*\/\s*((?:\d+(?:[,.]\d+)?)|(?:[a-zA-Z]+)|(?:\([^()]+\)))/g,
+      (_, lead, a, b) => `${lead}\\frac{${stripOuterParens(a)}}{${stripOuterParens(b)}}`
     );
   }
+  return s.replace(/\s+/g, " ");
+}
 
-  function cleanFormat() {
-    const cleanHtml = cleanEditorFormat(editorRef.current);
-    updateCurrentPage({ html: cleanHtml });
-    setStatus("Đã dọn format nội dung");
+function replaceLatexText(text) {
+  return String(text)
+    .replace(/\\Delta/g, "Δ")
+    .replace(/\\Rightarrow/g, "⇒")
+    .replace(/\\to/g, "→")
+    .replace(/\\le/g, "≤")
+    .replace(/\\ge/g, "≥")
+    .replace(/\\ne/g, "≠")
+    .replace(/\\cdot/g, "·")
+    .replace(/\\times/g, "×")
+    .replace(/\\alpha/g, "α")
+    .replace(/\\beta/g, "β")
+    .replace(/\\pi/g, "π")
+    .replace(/\\infty/g, "∞");
+}
+
+function readBraced(text, openIndex) {
+  if (text[openIndex] !== "{") return null;
+  let depth = 0;
+  for (let i = openIndex; i < text.length; i += 1) {
+    if (text[i] === "{") depth += 1;
+    if (text[i] === "}") depth -= 1;
+    if (depth === 0) return { value: text.slice(openIndex + 1, i), end: i + 1 };
   }
+  return null;
+}
 
-  function handleCopyText() {
-    copyPlainText({
-      editorRef,
-      showDiagram: false,
-      diagram: {},
-      setStatus,
-    });
-  }
+function renderLatexInline(input) {
+  const text = String(input || "");
+  const nodes = [];
+  let i = 0;
 
-  function handleCopyHtml() {
-    copyHtml({ editorRef, setStatus });
-  }
-
-  function handlePrint() {
-    saveDocument();
-    printPdf({ saveDocument: () => {} });
-  }
-
-
-  function isEditableShortcutTarget(target) {
-    if (!target) return false;
-
-    const tag = target.tagName;
-
-    return (
-      tag === "INPUT" ||
-      tag === "TEXTAREA" ||
-      tag === "MATH-FIELD" ||
-      target.isContentEditable ||
-      target.closest?.("[contenteditable='true']")
-    );
-  }
-
-  useEffect(() => {
-    function handleGlobalShortcuts(event) {
-      const key = event.key.toLowerCase();
-
-      if ((event.ctrlKey || event.metaKey) && key === "s") {
-        event.preventDefault();
-        saveDocument();
-        return;
-      }
-
-      if ((event.ctrlKey || event.metaKey) && key === "p") {
-        event.preventDefault();
-        handlePrint();
-        return;
-      }
-
-      if ((event.ctrlKey || event.metaKey) && event.shiftKey && key === "c") {
-        event.preventDefault();
-        handleCopyText();
-        return;
-      }
-
-      if ((event.ctrlKey || event.metaKey) && event.shiftKey && key === "f") {
-        event.preventDefault();
-
-        if (!isEditableShortcutTarget(event.target) || editorRef.current?.contains(event.target)) {
-          cleanFormat();
-        }
+  while (i < text.length) {
+    if (text.startsWith("\\frac", i)) {
+      const n = readBraced(text, i + 5);
+      const d = n ? readBraced(text, n.end) : null;
+      if (n && d) {
+        nodes.push(
+          <span className="math-frac" key={`f-${i}`}>
+            <span className="math-frac-top">{renderLatexInline(n.value)}</span>
+            <span className="math-frac-bottom">{renderLatexInline(d.value)}</span>
+          </span>
+        );
+        i = d.end;
+        continue;
       }
     }
 
-    window.addEventListener("keydown", handleGlobalShortcuts);
+    if (text.startsWith("\\sqrt", i)) {
+      const body = readBraced(text, i + 5);
+      if (body) {
+        nodes.push(
+          <span className="math-sqrt" key={`sqrt-${i}`}>
+            <span className="math-root">√</span>
+            <span className="math-radicand">{renderLatexInline(body.value)}</span>
+          </span>
+        );
+        i = body.end;
+        continue;
+      }
+    }
 
-    return () => window.removeEventListener("keydown", handleGlobalShortcuts);
-  });
+    if (text[i] === "^") {
+      if (text[i + 1] === "{") {
+        const body = readBraced(text, i + 1);
+        if (body) {
+          nodes.push(<sup key={`sup-${i}`}>{renderLatexInline(body.value)}</sup>);
+          i = body.end;
+          continue;
+        }
+      }
+      nodes.push(<sup key={`sup-${i}`}>{text[i + 1] || ""}</sup>);
+      i += 2;
+      continue;
+    }
 
-  if (!currentPage) {
-    return <div className="app">Đang tải tài liệu...</div>;
+    let j = i + 1;
+    while (j < text.length && !text.startsWith("\\frac", j) && !text.startsWith("\\sqrt", j) && text[j] !== "^") j += 1;
+    nodes.push(<span key={`t-${i}`}>{replaceLatexText(text.slice(i, j))}</span>);
+    i = j;
   }
 
+  return nodes;
+}
+
+function makeInitialDoc() {
+  return {
+    tool: "select",
+    activePageId: "page-1",
+    selectedObjectId: null,
+    selectedShapeId: null,
+    pages: [
+      { id: "page-1", name: "Trang 1", objects: [] }
+    ]
+  };
+}
+
+function getActivePage(doc) {
+  return doc.pages.find((p) => p.id === doc.activePageId) || doc.pages[0];
+}
+function getSelectedObject(doc) {
+  const page = getActivePage(doc);
+  return page.objects.find((o) => o.id === doc.selectedObjectId) || null;
+}
+function updateActiveObject(doc, objectId, updater) {
+  const page = getActivePage(doc);
+  const object = page.objects.find((o) => o.id === objectId);
+  if (object) updater(object);
+}
+function updateSelectedShape(doc, updater) {
+  const obj = getSelectedObject(doc);
+  if (!obj || obj.type !== "geometry") return;
+  const shape = obj.shapes.find((s) => s.id === doc.selectedShapeId);
+  if (shape) updater(shape, obj);
+}
+
+function useHistory(initial) {
+  const [state, setState] = useState({ past: [], present: initial, future: [] });
+  const presentRef = useRef(state.present);
+  useEffect(() => {
+    presentRef.current = state.present;
+  }, [state.present]);
+
+  const commit = useCallback((updater) => {
+    setState((h) => {
+      const next = clone(h.present);
+      updater(next);
+      return { past: trimHistory([...h.past, h.present]), present: next, future: [] };
+    });
+  }, []);
+
+  const silent = useCallback((updater) => {
+    setState((h) => {
+      const next = clone(h.present);
+      updater(next);
+      return { ...h, present: next };
+    });
+  }, []);
+
+  const replacePresent = useCallback((next) => {
+    setState((h) => ({ ...h, present: next }));
+  }, []);
+
+  const pushDragHistory = useCallback((base) => {
+    setState((h) => ({ past: trimHistory([...h.past, base]), present: h.present, future: [] }));
+  }, []);
+
+  const undo = useCallback(() => {
+    setState((h) => {
+      if (!h.past.length) return h;
+      const previous = h.past[h.past.length - 1];
+      return { past: h.past.slice(0, -1), present: previous, future: [h.present, ...h.future] };
+    });
+  }, []);
+
+  const redo = useCallback(() => {
+    setState((h) => {
+      if (!h.future.length) return h;
+      const next = h.future[0];
+      return { past: trimHistory([...h.past, h.present]), present: next, future: h.future.slice(1) };
+    });
+  }, []);
+
+  return { state, presentRef, commit, silent, replacePresent, pushDragHistory, undo, redo };
+}
+
+function App() {
+  const { state, presentRef, commit, silent, replacePresent, pushDragHistory, undo, redo } = useHistory(makeInitialDoc());
+  const doc = state.present;
+  const activePage = getActivePage(doc);
+  const selectedObject = getSelectedObject(doc);
+  const dragRef = useRef(null);
+  const [editingMathId, setEditingMathId] = useState(null);
+
+  const selectObject = useCallback((objectId, shapeId = null) => {
+    silent((d) => {
+      d.selectedObjectId = objectId;
+      d.selectedShapeId = shapeId;
+    });
+  }, [silent]);
+
+  const addObject = useCallback((type) => {
+    commit((d) => {
+      const page = getActivePage(d);
+      let obj;
+      if (type === "text") {
+        obj = { id: uid("text"), type: "text", x: 70, y: 70, w: 650, h: 900, text: "", fontSize: 22, bold: false, italic: false, underline: false, align: "left" };
+      }
+      if (type === "math") {
+        obj = { id: uid("math"), type: "math", x: 95, y: 120, w: 610, h: 90, raw: "", fontSize: 30, align: "center" };
+      }
+      if (type === "geometry") {
+        obj = { id: uid("geo"), type: "geometry", x: 120, y: 210, w: 430, h: 280, baseW: 430, baseH: 280, showGrid: true, showAxes: false, shapes: [] };
+      }
+      if (type === "graph") {
+        obj = { id: uid("geo"), type: "geometry", x: 120, y: 210, w: 430, h: 280, showGrid: true, showAxes: true, shapes: [{ id: uid("graph"), type: "graph", expr: "x^2/4 - 2" }] };
+      }
+      if (obj) {
+        page.objects.push(obj);
+        d.selectedObjectId = obj.id;
+        d.selectedShapeId = null;
+      }
+    });
+  }, [commit]);
+
+  const addPage = useCallback(() => {
+    commit((d) => {
+      const id = uid("page");
+      d.pages.push({ id, name: `Trang ${d.pages.length + 1}`, objects: [] });
+      d.activePageId = id;
+      d.selectedObjectId = null;
+      d.selectedShapeId = null;
+    });
+  }, [commit]);
+
+  const deletePage = useCallback(() => {
+    commit((d) => {
+      if (d.pages.length <= 1) return;
+      const index = d.pages.findIndex((p) => p.id === d.activePageId);
+      d.pages.splice(index, 1);
+      d.activePageId = d.pages[Math.max(0, index - 1)].id;
+      d.pages.forEach((p, i) => { p.name = `Trang ${i + 1}`; });
+      d.selectedObjectId = null;
+      d.selectedShapeId = null;
+    });
+  }, [commit]);
+
+  const deleteSelection = useCallback(() => {
+    const current = presentRef.current;
+    if (!current.selectedObjectId) return;
+    commit((d) => {
+      const obj = getSelectedObject(d);
+      if (obj?.type === "geometry" && d.selectedShapeId) {
+        obj.shapes = obj.shapes.filter((s) => s.id !== d.selectedShapeId);
+        d.selectedShapeId = null;
+        return;
+      }
+      const page = getActivePage(d);
+      page.objects = page.objects.filter((o) => o.id !== d.selectedObjectId);
+      d.selectedObjectId = null;
+      d.selectedShapeId = null;
+    });
+  }, [commit, presentRef]);
+
+  const startMove = useCallback((event, objectId) => {
+    if (event.target.closest("input, textarea, button, select, [contenteditable='true'], .resize-handle, .shape-hit")) return;
+    const base = clone(presentRef.current);
+    const object = getActivePage(base).objects.find((o) => o.id === objectId);
+    if (!object) return;
+    event.preventDefault();
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    dragRef.current = { kind: "move", objectId, base, startX: event.clientX, startY: event.clientY, start: { x: object.x, y: object.y }, moved: false };
+    silent((d) => {
+      d.selectedObjectId = objectId;
+      d.selectedShapeId = null;
+    });
+  }, [presentRef, silent]);
+
+  const startResize = useCallback((event, objectId, corner) => {
+    event.stopPropagation();
+    const base = clone(presentRef.current);
+    const object = getActivePage(base).objects.find((o) => o.id === objectId);
+    if (!object) return;
+    dragRef.current = { kind: "resize", objectId, corner, base, startX: event.clientX, startY: event.clientY, start: { x: object.x, y: object.y, w: object.w, h: object.h }, moved: false };
+  }, [presentRef]);
+
+  useEffect(() => {
+    const onMove = (event) => {
+      const drag = dragRef.current;
+      if (!drag) return;
+      const dx = event.clientX - drag.startX;
+      const dy = event.clientY - drag.startY;
+      if (Math.abs(dx) + Math.abs(dy) > 1) drag.moved = true;
+      const next = clone(drag.base);
+      updateActiveObject(next, drag.objectId, (obj) => {
+        if (drag.kind === "move") {
+          obj.x = Math.max(0, Math.min(PAGE_W - obj.w, drag.start.x + dx));
+          obj.y = Math.max(0, Math.min(PAGE_H - obj.h, drag.start.y + dy));
+        }
+        if (drag.kind === "resize") {
+          if (obj.type === "geometry") {
+            obj.baseW = obj.baseW || drag.start.w;
+            obj.baseH = obj.baseH || drag.start.h;
+          }
+          let { x, y, w, h } = drag.start;
+          if (drag.corner.includes("e")) w = Math.max(80, drag.start.w + dx);
+          if (drag.corner.includes("s")) h = Math.max(60, drag.start.h + dy);
+          if (drag.corner.includes("w")) { x = drag.start.x + dx; w = Math.max(80, drag.start.w - dx); }
+          if (drag.corner.includes("n")) { y = drag.start.y + dy; h = Math.max(60, drag.start.h - dy); }
+          obj.x = Math.max(0, x);
+          obj.y = Math.max(0, y);
+          obj.w = Math.min(PAGE_W - obj.x, w);
+          obj.h = Math.min(PAGE_H - obj.y, h);
+        }
+      });
+      replacePresent(next);
+    };
+    const onUp = () => {
+      const drag = dragRef.current;
+      if (drag?.moved) pushDragHistory(drag.base);
+      dragRef.current = null;
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+  }, [replacePresent, pushDragHistory]);
+
+  useEffect(() => {
+    const onKey = (event) => {
+      const tag = event.target.tagName?.toLowerCase();
+      const isTyping = tag === "input" || tag === "textarea" || event.target.isContentEditable;
+      if (event.ctrlKey && event.key.toLowerCase() === "z") {
+        event.preventDefault();
+        if (event.shiftKey) redo(); else undo();
+        return;
+      }
+      if ((event.ctrlKey && event.key.toLowerCase() === "y")) {
+        event.preventDefault();
+        redo();
+        return;
+      }
+      if (event.ctrlKey && event.key.toLowerCase() === "s") {
+        event.preventDefault();
+        return;
+      }
+      if (event.ctrlKey && event.key.toLowerCase() === "p") {
+        event.preventDefault();
+        window.print();
+        return;
+      }
+      if (!isTyping && (event.key === "Delete" || event.key === "Backspace")) {
+        event.preventDefault();
+        deleteSelection();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [undo, redo, deleteSelection]);
+
+  const updateObject = (objectId, patch) => {
+    commit((d) => updateActiveObject(d, objectId, (obj) => Object.assign(obj, patch)));
+  };
+
+  const addGeometryShape = (shapeType) => {
+    commit((d) => {
+      const obj = getSelectedObject(d);
+      if (!obj || obj.type !== "geometry") return;
+      let shape = null;
+      if (shapeType === "point") shape = { id: uid("pt"), type: "point", x: obj.w / 2, y: obj.h / 2, label: "A" };
+      if (shapeType === "segment") shape = { id: uid("seg"), type: "segment", x1: 70, y1: obj.h / 2, x2: 270, y2: obj.h / 2, labelA: "A", labelB: "B", length: 5, unit: "cm", showLength: true };
+      if (shapeType === "triangle") shape = { id: uid("tri"), type: "triangle", points: [{ x: obj.w / 2, y: 55 }, { x: obj.w - 80, y: obj.h - 55 }, { x: 80, y: obj.h - 55 }], labels: ["A", "B", "C"] };
+      if (shapeType === "rect") shape = { id: uid("rect"), type: "rect", x: 80, y: 70, w: 210, h: 130, label: "" };
+      if (shapeType === "circle") shape = { id: uid("cir"), type: "circle", cx: obj.w / 2, cy: obj.h / 2, r: 70, label: "O" };
+      if (shapeType === "graph") {
+        obj.showAxes = true;
+        obj.showGrid = true;
+        shape = { id: uid("graph"), type: "graph", expr: "" };
+      }
+      if (shape) {
+        obj.shapes.push(shape);
+        d.selectedShapeId = shape.id;
+      }
+    });
+  };
+
   return (
-    <div className="app">
-      <Topbar />
-
-      <div className="layout">
-        <LeftSidebar
-          pages={pages}
-          currentPageId={currentPageId}
-          status={status}
-          savedAt={savedAt}
-          onSelectPage={selectPage}
-          onAddPage={addPage}
-          onDeletePage={deleteCurrentPage}
-          onSave={saveDocument}
-          onCopyText={handleCopyText}
-          onCopyHtml={handleCopyHtml}
-          onPrint={handlePrint}
-          onReset={resetDocument}
-        />
-
-        <main className="main">
-          <Toolbar
-            activeTool={activeTool}
-            setActiveTool={setActiveTool}
-            onBold={() => runCommand("bold")}
-            onItalic={() => runCommand("italic")}
-            onUnderline={() => runCommand("underline")}
-            onHighlight={() =>
-              insertHtml(`<span class="highlight">nội dung cần nhấn mạnh</span>`, "Đã chèn highlight")
-            }
-            onAlignLeft={() => runCommand("justifyLeft")}
-            onAlignCenter={() => runCommand("justifyCenter")}
-            onAlignRight={() => runCommand("justifyRight")}
-            onMath={() => insertSmartFormula("")}
-            onTextBox={insertTextBox}
-            onAddFigure={() => addFigure("select")}
-            onDraw={startDraw}
-            onCleanFormat={cleanFormat}
-          />
-
-          <DocumentPage
-            pages={pages}
-            currentPageId={currentPageId}
-            pageCount={pages.length}
-            editorRef={editorRef}
-            activeTool={activeTool}
-            rememberSelection={rememberSelection}
-            onSelectPage={selectPage}
-            onDeselectFigure={deselectFigure}
-            onUpdatePageHtml={(pageId, html) => updatePage(pageId, { html })}
-            onUpdateFigure={updateFigure}
-            onUpdateFigureBox={updateFigureBox}
-            onSelectFigure={selectFigure}
-            onDeleteFigure={deleteFigure}
-            setActiveTool={setActiveTool}
-            setStatus={setStatus}
-            onInsertSmartFormula={insertSmartFormula}
+    <div className="app-shell">
+      <TopBar canUndo={state.past.length > 0} canRedo={state.future.length > 0} onUndo={undo} onRedo={redo} />
+      <div className="workspace">
+        <LeftPagesPanel doc={doc} activePage={activePage} onSelectPage={(pageId) => silent((d) => { d.activePageId = pageId; d.selectedObjectId = null; d.selectedShapeId = null; })} onAddPage={addPage} onDeletePage={deletePage} />
+        <main className="center-pane">
+          <MainToolbar doc={doc} onSetTool={(tool) => silent((d) => { d.tool = tool; })} onAddObject={addObject} />
+          <PageCanvas
+            page={activePage}
+            doc={doc}
+            selectedObjectId={doc.selectedObjectId}
+            selectedShapeId={doc.selectedShapeId}
+            onDeselect={() => silent((d) => { d.selectedObjectId = null; d.selectedShapeId = null; })}
+            onStartMove={startMove}
+            onStartResize={startResize}
+            onSelectObject={selectObject}
+            onUpdateObject={updateObject}
+            editingMathId={editingMathId}
+            setEditingMathId={setEditingMathId}
+            commit={commit}
           />
         </main>
-
-        <RightSidebar
-          symbols={SYMBOLS}
-          formulas={FORMULAS}
-          templates={TEMPLATES}
-          figures={figures}
-          activeFigure={activeFigure}
-          onSelectFigure={(figureId) => selectFigure(currentPageId, figureId)}
-          onUpdateFigure={updateActiveFigure}
-          onDeleteFigure={(figureId) => deleteFigure(currentPageId, figureId)}
-          onDeselectFigure={() => deselectFigure(currentPageId)}
-          onClearFigure={clearActiveFigure}
-          onInsertSymbol={(symbol) => insertSmartFormula(symbol)}
-          onInsertFormula={(formula) => insertSmartFormula(formula)}
-          onInsertTemplate={(template) => insertHtml(template.html, `Đã chèn mẫu: ${template.name}`)}
+        <PropertiesPanel
+          doc={doc}
+          object={selectedObject}
+          selectedShapeId={doc.selectedShapeId}
+          onUpdateObject={(patch) => selectedObject && updateObject(selectedObject.id, patch)}
+          onDelete={deleteSelection}
+          onAddShape={addGeometryShape}
+          commit={commit}
         />
       </div>
     </div>
   );
 }
+
+function TopBar({ canUndo, canRedo, onUndo, onRedo }) {
+  return (
+    <header className="topbar">
+      <div className="brand">
+        <div className="brand-mark">Σ</div>
+        <div>
+          <h1>Math Word Studio</h1>
+          <p>Soạn bài · công thức · hình học · đồ thị</p>
+        </div>
+        <span className="badge">MVP v5</span>
+      </div>
+      <div className="top-actions">
+        <button className="soft-btn" disabled={!canUndo} onClick={onUndo}>↶ Undo</button>
+        <button className="soft-btn" disabled={!canRedo} onClick={onRedo}>↷ Redo</button>
+        <button className="soft-btn" onClick={() => window.print()}>In/PDF</button>
+        <span className="save-dot">Đã lưu tạm</span>
+      </div>
+    </header>
+  );
+}
+
+function MainToolbar({ doc, onSetTool, onAddObject }) {
+  const tools = [
+    { id: "select", label: "Chọn", action: () => onSetTool("select") },
+    { id: "geometry", label: "Hình học", action: () => { onSetTool("geometry"); onAddObject("geometry"); } },
+    { id: "graph", label: "Đồ thị", action: () => { onSetTool("graph"); onAddObject("graph"); } }
+  ];
+
+  return (
+    <div className="main-toolbar">
+      {tools.map((t) => (
+        <button
+          key={t.id}
+          className={doc.tool === t.id ? "tool active" : "tool"}
+          onClick={t.action}
+        >
+          {t.label}
+        </button>
+      ))}
+      <span className="toolbar-hint">Click trực tiếp vào trang để viết · Hình học/Đồ thị dùng nút riêng</span>
+    </div>
+  );
+}
+
+function LeftPagesPanel({ doc, activePage, onSelectPage, onAddPage, onDeletePage }) {
+  return (
+    <aside className="left-panel">
+      <h2>Trang</h2>
+      <div className="page-list">
+        {doc.pages.map((page, index) => (
+          <button key={page.id} className={page.id === activePage.id ? "page-card active" : "page-card"} onClick={() => onSelectPage(page.id)}>
+            <div className="page-thumb">
+              {page.objects.slice(0, 3).map((obj) => <span key={obj.id} className={`mini mini-${obj.type}`} />)}
+            </div>
+            <div>
+              <strong>Trang {index + 1}</strong>
+              <small>{page.objects.length ? `${page.objects.length} đối tượng` : "Trang trống"}</small>
+            </div>
+          </button>
+        ))}
+      </div>
+      <button className="wide-btn" onClick={onAddPage}>＋ Thêm trang</button>
+      <button className="wide-btn danger" onClick={onDeletePage}>🗑 Xóa trang</button>
+
+    </aside>
+  );
+}
+
+function PageCanvas({ page, doc, selectedObjectId, selectedShapeId, onDeselect, onStartMove, onStartResize, onSelectObject, onUpdateObject, editingMathId, setEditingMathId, commit }) {
+  return (
+    <section className="canvas-scroll">
+      <div className="page-label">A4 · {page.name}</div>
+      <div className="page" style={{ width: PAGE_W, height: PAGE_H }} onPointerDown={onDeselect}>
+        {page.objects.map((obj) => (
+          <EditorObject
+            key={obj.id}
+            obj={obj}
+            doc={doc}
+            selected={selectedObjectId === obj.id}
+            selectedShapeId={selectedShapeId}
+            onStartMove={onStartMove}
+            onStartResize={onStartResize}
+            onSelectObject={onSelectObject}
+            onUpdateObject={onUpdateObject}
+            editingMathId={editingMathId}
+            setEditingMathId={setEditingMathId}
+            commit={commit}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function EditorObject({ obj, doc, selected, selectedShapeId, onStartMove, onStartResize, onSelectObject, onUpdateObject, editingMathId, setEditingMathId, commit }) {
+  const style = { left: obj.x, top: obj.y, width: obj.w, height: obj.h };
+  return (
+    <div
+      className={selected ? `editor-object ${obj.type} selected` : `editor-object ${obj.type}`}
+      style={style}
+      onPointerDown={(e) => {
+        e.stopPropagation();
+        onStartMove(e, obj.id);
+      }}
+      onClick={(e) => {
+        e.stopPropagation();
+        onSelectObject(obj.id, selectedShapeId);
+      }}
+    >
+      {obj.type === "text" && <TextObject obj={obj} onUpdateObject={onUpdateObject} />}
+      {obj.type === "math" && <MathObject obj={obj} editing={editingMathId === obj.id} setEditingMathId={setEditingMathId} onUpdateObject={onUpdateObject} />}
+      {obj.type === "geometry" && <GeometryObject obj={obj} doc={doc} selectedShapeId={selectedShapeId} commit={commit} onSelectObject={onSelectObject} />}
+      {selected && <ResizeHandles objectId={obj.id} onStartResize={onStartResize} />}
+    </div>
+  );
+}
+
+function ResizeHandles({ objectId, onStartResize }) {
+  return ["nw", "ne", "sw", "se"].map((corner) => (
+    <span key={corner} className={`resize-handle ${corner}`} onPointerDown={(e) => onStartResize(e, objectId, corner)} />
+  ));
+}
+
+function looksLikeMath(text) {
+  const t = String(text || "").trim();
+  if (!t) return false;
+  return /\\frac|sqrt\(|căn\s*\(|[a-zA-Z0-9)]\s*\/\s*[a-zA-Z0-9(]|[a-zA-Z0-9)]\s*\^\s*[0-9{]|Delta|<=|>=|!=|=>|[=+×÷]/.test(t);
+}
+
+function TextObject({ obj, onUpdateObject }) {
+  const textRef = useRef(null);
+  useEffect(() => {
+    if (textRef.current && textRef.current.innerText !== obj.text) textRef.current.innerText = obj.text;
+  }, [obj.text]);
+
+  const saveText = (e) => {
+    const value = e.currentTarget.innerText.trim();
+    if (looksLikeMath(value)) {
+      onUpdateObject(obj.id, {
+        type: "math",
+        raw: value,
+        fontSize: Math.max(28, obj.fontSize || 28),
+        align: obj.align || "center",
+        h: Math.max(80, obj.h || 80)
+      });
+      return;
+    }
+    onUpdateObject(obj.id, { text: value });
+  };
+
+  return (
+    <div
+      ref={textRef}
+      className="text-box"
+      contentEditable
+      suppressContentEditableWarning
+      spellCheck={false}
+      style={{ fontSize: obj.fontSize, textAlign: obj.align, fontWeight: obj.bold ? 800 : 500, fontStyle: obj.italic ? "italic" : "normal", textDecoration: obj.underline ? "underline" : "none" }}
+      onBlur={saveText}
+    >
+      {obj.text}
+    </div>
+  );
+}
+
+function MathObject({ obj, editing, setEditingMathId, onUpdateObject }) {
+  const [draft, setDraft] = useState(obj.raw);
+  useEffect(() => setDraft(obj.raw), [obj.raw, editing]);
+  const latex = useMemo(() => normalizeMath(obj.raw), [obj.raw]);
+  const save = () => {
+    onUpdateObject(obj.id, { raw: draft });
+    setEditingMathId(null);
+  };
+
+  if (editing) {
+    return (
+      <div className="math-editor" data-no-drag="true">
+        <textarea autoFocus value={draft} onChange={(e) => setDraft(e.target.value)} onBlur={save} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); save(); } }} />
+        <small>Gõ kiểu dễ: a/b, sqrt(x), x^2, Delta, &lt;=, &gt;=</small>
+      </div>
+    );
+  }
+
+  return (
+    <div className="math-box" style={{ fontSize: obj.fontSize, textAlign: obj.align }} onDoubleClick={(e) => { e.stopPropagation(); setEditingMathId(obj.id); }}>
+      {renderLatexInline(latex)}
+    </div>
+  );
+}
+
+function GeometryObject({ obj, doc, selectedShapeId, commit, onSelectObject }) {
+  const viewW = obj.baseW || obj.w || 430;
+  const viewH = obj.baseH || obj.h || 280;
+  const frame = { ...obj, w: viewW, h: viewH };
+  const gridLines = [];
+
+  if (obj.showGrid) {
+    for (let x = GRID; x < viewW; x += GRID) gridLines.push(<line key={`vx-${x}`} x1={x} y1={0} x2={x} y2={viewH} className="grid-line" />);
+    for (let y = GRID; y < viewH; y += GRID) gridLines.push(<line key={`hy-${y}`} x1={0} y1={y} x2={viewW} y2={y} className="grid-line" />);
+  }
+
+  const addCoordPointAt = (event) => {
+    if (!obj.showAxes) return;
+    event.stopPropagation();
+
+    const rect = event.currentTarget.getBoundingClientRect();
+    const localX = ((event.clientX - rect.left) / rect.width) * viewW;
+    const localY = ((event.clientY - rect.top) / rect.height) * viewH;
+    const coordX = Number(((localX - viewW / 2) / 25).toFixed(2));
+    const coordY = Number(((viewH / 2 - localY) / 25).toFixed(2));
+
+    commit((d) => {
+      updateActiveObject(d, obj.id, (geo) => {
+        geo.baseW = geo.baseW || viewW;
+        geo.baseH = geo.baseH || viewH;
+        geo.showAxes = true;
+        geo.showAxisNumbers = true;
+        geo.showPointGuides = true;
+        geo.showPointCoordinates = true;
+
+        const count = geo.shapes.filter((s) => s.type === "coordPoint").length;
+        const newPoint = {
+          id: uid("cpt"),
+          type: "coordPoint",
+          label: String.fromCharCode(65 + (count % 26)),
+          coordX,
+          coordY
+        };
+
+        geo.shapes.push(newPoint);
+        d.selectedObjectId = obj.id;
+        d.selectedShapeId = newPoint.id;
+      });
+    });
+  };
+
+  return (
+    <div className="geometry-frame">
+      <svg
+        width="100%"
+        height="100%"
+        viewBox={`0 0 ${viewW} ${viewH}`}
+        onDoubleClick={addCoordPointAt}
+      >
+        <rect x="0" y="0" width={viewW} height={viewH} className="geo-bg" />
+        {gridLines}
+        {obj.showAxes && <Axes w={viewW} h={viewH} showNumbers={obj.showAxisNumbers !== false} />}
+        {obj.shapes.map((shape) => (
+          <GeometryShape
+            key={shape.id}
+            shape={shape}
+            frame={frame}
+            selected={selectedShapeId === shape.id}
+            onSelect={(e) => {
+              e.stopPropagation();
+              onSelectObject(obj.id, shape.id);
+            }}
+            commit={commit}
+          />
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+function Axes({ w, h }) {
+  const cx = w / 2;
+  const cy = h / 2;
+  return (
+    <g className="axes">
+      <line x1="0" y1={cy} x2={w} y2={cy} />
+      <line x1={cx} y1="0" x2={cx} y2={h} />
+      <text x={cx + 6} y={cy - 6}>O</text>
+      <text x={w - 16} y={cy - 6}>x</text>
+      <text x={cx + 6} y="16">y</text>
+    </g>
+  );
+}
+
+function GeometryShape({ shape, frame, selected, onSelect }) {
+  if (shape.type === "point") {
+    return (
+      <g className={selected ? "shape-hit selected-shape" : "shape-hit"} onPointerDown={onSelect}>
+        <circle cx={shape.x} cy={shape.y} r="6" />
+        <text x={shape.x + 9} y={shape.y - 9}>{shape.label}</text>
+      </g>
+    );
+  }
+  if (shape.type === "segment") {
+    const mx = (shape.x1 + shape.x2) / 2;
+    const my = (shape.y1 + shape.y2) / 2;
+    return (
+      <g className={selected ? "shape-hit selected-shape" : "shape-hit"} onPointerDown={onSelect}>
+        <line x1={shape.x1} y1={shape.y1} x2={shape.x2} y2={shape.y2} />
+        <circle cx={shape.x1} cy={shape.y1} r="5" />
+        <circle cx={shape.x2} cy={shape.y2} r="5" />
+        <text x={shape.x1 - 18} y={shape.y1 - 9}>{shape.labelA}</text>
+        <text x={shape.x2 + 9} y={shape.y2 - 9}>{shape.labelB}</text>
+        {shape.showLength && <text className="length-label" x={mx - 24} y={my - 12}>{shape.length} {shape.unit}</text>}
+      </g>
+    );
+  }
+  if (shape.type === "triangle") {
+    const p = shape.points;
+    return (
+      <g className={selected ? "shape-hit selected-shape" : "shape-hit"} onPointerDown={onSelect}>
+        <polygon points={p.map((pt) => `${pt.x},${pt.y}`).join(" ")} />
+        {p.map((pt, i) => <React.Fragment key={i}><circle cx={pt.x} cy={pt.y} r="5" /><text x={pt.x + 8} y={pt.y - 8}>{shape.labels?.[i] || ""}</text></React.Fragment>)}
+      </g>
+    );
+  }
+  if (shape.type === "rect") {
+    return <g className={selected ? "shape-hit selected-shape" : "shape-hit"} onPointerDown={onSelect}><rect x={shape.x} y={shape.y} width={shape.w} height={shape.h} rx="2" /></g>;
+  }
+  if (shape.type === "circle") {
+    return <g className={selected ? "shape-hit selected-shape" : "shape-hit"} onPointerDown={onSelect}><circle cx={shape.cx} cy={shape.cy} r={shape.r} /><text x={shape.cx + 8} y={shape.cy - 8}>{shape.label}</text></g>;
+  }
+  if (shape.type === "graph") {
+    return <path className={selected ? "shape-hit graph-line selected-shape" : "shape-hit graph-line"} d={buildGraphPath(shape.expr, frame.w, frame.h)} onPointerDown={onSelect} />;
+  }
+  return null;
+}
+
+function buildGraphPath(expr, w, h) {
+  if (!String(expr || "").trim()) return "";
+  const cx = w / 2;
+  const cy = h / 2;
+  const scale = 25;
+  const safe = String(expr || "x")
+    .replace(/\^/g, "**")
+    .replace(/sin/g, "Math.sin")
+    .replace(/cos/g, "Math.cos")
+    .replace(/tan/g, "Math.tan")
+    .replace(/sqrt/g, "Math.sqrt")
+    .replace(/(\d)(x)/g, "$1*$2");
+  let fn;
+  try { fn = new Function("x", `return ${safe};`); } catch { return ""; }
+  const points = [];
+  for (let px = 0; px <= w; px += 4) {
+    const x = (px - cx) / scale;
+    let y;
+    try { y = Number(fn(x)); } catch { y = NaN; }
+    if (!Number.isFinite(y)) continue;
+    points.push(`${points.length ? "L" : "M"}${px.toFixed(1)},${(cy - y * scale).toFixed(1)}`);
+  }
+  return points.join(" ");
+}
+
+function PropertiesPanel({ doc, object, selectedShapeId, onUpdateObject, onDelete, onAddShape, commit }) {
+  const selectedShape = object?.type === "geometry" ? object.shapes.find((s) => s.id === selectedShapeId) : null;
+
+  if (!object) {
+    return (
+      <aside className="right-panel">
+        <h2>Thuộc tính</h2>
+        <div className="empty-state">
+          <strong>Chọn chữ, công thức hoặc hình</strong>
+          <p>Panel này chỉ hiện đúng công cụ cần thiết, tránh trùng nút như bản cũ.</p>
+        </div>
+        <QuickMathSymbols />
+      </aside>
+    );
+  }
+
+  return (
+    <aside className="right-panel">
+      <div className="panel-title-row">
+        <h2>{object.type === "text" ? "Chữ" : object.type === "math" ? "Công thức" : "Hình học"}</h2>
+        <button className="icon-danger" onClick={onDelete}>Xóa</button>
+      </div>
+
+      <div className="prop-grid">
+        <NumberField label="X" value={object.x} onChange={(v) => onUpdateObject({ x: v })} />
+        <NumberField label="Y" value={object.y} onChange={(v) => onUpdateObject({ y: v })} />
+        <NumberField label="Rộng" value={object.w} onChange={(v) => onUpdateObject({ w: Math.max(80, v) })} />
+        <NumberField label="Cao" value={object.h} onChange={(v) => onUpdateObject({ h: Math.max(60, v) })} />
+      </div>
+
+      {object.type === "text" && <TextProperties object={object} onUpdateObject={onUpdateObject} />}
+      {object.type === "math" && <MathProperties object={object} onUpdateObject={onUpdateObject} />}
+      {object.type === "geometry" && <GeometryProperties object={object} selectedShape={selectedShape} onUpdateObject={onUpdateObject} onAddShape={onAddShape} commit={commit} />}
+    </aside>
+  );
+}
+
+function NumberField({ label, value, onChange }) {
+  return (
+    <label className="field compact">
+      <span>{label}</span>
+      <input type="number" value={Math.round(value)} onChange={(e) => onChange(Number(e.target.value || 0))} />
+    </label>
+  );
+}
+
+function TextProperties({ object, onUpdateObject }) {
+  return (
+    <div className="panel-section">
+      <h3>Định dạng chữ</h3>
+      <NumberField label="Cỡ" value={object.fontSize} onChange={(v) => onUpdateObject({ fontSize: Math.max(10, v) })} />
+      <div className="button-row">
+        <button className={object.bold ? "toggle active" : "toggle"} onClick={() => onUpdateObject({ bold: !object.bold })}>B</button>
+        <button className={object.italic ? "toggle active" : "toggle"} onClick={() => onUpdateObject({ italic: !object.italic })}>I</button>
+        <button className={object.underline ? "toggle active" : "toggle"} onClick={() => onUpdateObject({ underline: !object.underline })}>U</button>
+      </div>
+      <div className="button-row">
+        {["left", "center", "right"].map((align) => <button key={align} className={object.align === align ? "toggle active" : "toggle"} onClick={() => onUpdateObject({ align })}>{align}</button>)}
+      </div>
+    </div>
+  );
+}
+
+function MathProperties({ object, onUpdateObject }) {
+  const normalized = normalizeMath(object.raw);
+  return (
+    <div className="panel-section">
+      <h3>Sửa công thức dễ hơn</h3>
+      <label className="field">
+        <span>Nhập kiểu thường</span>
+        <textarea value={object.raw} onChange={(e) => onUpdateObject({ raw: e.target.value })} />
+      </label>
+      <div className="math-preview">{renderLatexInline(normalized)}</div>
+      <NumberField label="Cỡ" value={object.fontSize} onChange={(v) => onUpdateObject({ fontSize: Math.max(14, v) })} />
+      <div className="button-row">
+        {["left", "center", "right"].map((align) => <button key={align} className={object.align === align ? "toggle active" : "toggle"} onClick={() => onUpdateObject({ align })}>{align}</button>)}
+      </div>
+      <QuickMathSymbols onPick={(txt) => onUpdateObject({ raw: `${object.raw} ${txt}` })} />
+    </div>
+  );
+}
+
+function GeometryProperties({ object, selectedShape, onUpdateObject, onAddShape, commit }) {
+  const graphShapes = object.shapes.filter((s) => s.type === "graph");
+
+  const updateShape = (patch) => {
+    commit((d) => updateSelectedShape(d, (shape) => {
+      Object.assign(shape, patch);
+      if (shape.type === "segment" && patch.length !== undefined) {
+        const dx = shape.x2 - shape.x1;
+        const dy = shape.y2 - shape.y1;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        shape.x2 = shape.x1 + (dx / dist) * Number(patch.length) * PX_PER_UNIT;
+        shape.y2 = shape.y1 + (dy / dist) * Number(patch.length) * PX_PER_UNIT;
+      }
+    }));
+  };
+
+  const updateGraph = (id, patch) => {
+    commit((d) => {
+      const obj = getSelectedObject(d);
+      if (!obj || obj.type !== "geometry") return;
+      const graph = obj.shapes.find((s) => s.id === id);
+      if (graph) Object.assign(graph, patch);
+    });
+  };
+
+  const removeGraph = (id) => {
+    commit((d) => {
+      const obj = getSelectedObject(d);
+      if (!obj || obj.type !== "geometry") return;
+      obj.shapes = obj.shapes.filter((s) => s.id !== id);
+      if (d.selectedShapeId === id) d.selectedShapeId = null;
+    });
+  };
+
+  const removeSelectedShape = () => {
+    commit((d) => {
+      const obj = getSelectedObject(d);
+      if (!obj || !d.selectedShapeId) return;
+      obj.shapes = obj.shapes.filter((s) => s.id !== d.selectedShapeId);
+      d.selectedShapeId = null;
+    });
+  };
+
+  return (
+    <div className="panel-section">
+      <h3>Hình học / Đồ thị</h3>
+
+      <label className="check"><input type="checkbox" checked={object.showGrid} onChange={(e) => onUpdateObject({ showGrid: e.target.checked })} /> Lưới ô vuông</label>
+      <label className="check"><input type="checkbox" checked={object.showAxes} onChange={(e) => onUpdateObject({ showAxes: e.target.checked })} /> Trục Oxy</label>
+      <label className="check"><input type="checkbox" checked={object.showAxisNumbers !== false} onChange={(e) => onUpdateObject({ showAxisNumbers: e.target.checked })} /> Hiện số trên trục</label>
+      <label className="check"><input type="checkbox" checked={object.showPointCoordinates !== false} onChange={(e) => onUpdateObject({ showPointCoordinates: e.target.checked })} /> Hiện tọa độ điểm</label>
+      <label className="check"><input type="checkbox" checked={object.showPointGuides !== false} onChange={(e) => onUpdateObject({ showPointGuides: e.target.checked })} /> Nét đứt nối về 2 trục</label>
+
+      {graphShapes.length > 0 && (
+        <div className="graph-list">
+          <h3>Phương trình</h3>
+          {graphShapes.map((graph, index) => (
+            <div className="graph-row" key={graph.id}>
+              <label className="field">
+                <span>y{index + 1} =</span>
+                <input value={graph.expr} onChange={(e) => updateGraph(graph.id, { expr: e.target.value })} placeholder="Ví dụ: x^2/4 - 2" />
+              </label>
+              <button className="mini-danger" onClick={() => removeGraph(graph.id)}>Xóa</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="shape-buttons">
+        <button onClick={() => onAddShape("point")}>Điểm</button>
+        <button onClick={() => onAddShape("coordPoint")}>Điểm tọa độ</button>
+        <button onClick={() => onAddShape("segment")}>Đoạn</button>
+        <button onClick={() => onAddShape("triangle")}>Tam giác</button>
+        <button onClick={() => onAddShape("rect")}>Tứ giác</button>
+        <button onClick={() => onAddShape("circle")}>Tròn</button>
+        <button onClick={() => onAddShape("graph")}>+ Phương trình</button>
+      </div>
+
+      {selectedShape && <button className="mini-danger wide-mini" onClick={removeSelectedShape}>Xóa hình đang chọn</button>}
+
+      {selectedShape ? <ShapeProperties shape={selectedShape} updateShape={updateShape} /> : <p className="muted">Chọn một điểm/đoạn/hình trong khung để sửa số đo.</p>}
+    </div>
+  );
+}
+
+function ShapeProperties({ shape, updateShape }) {
+  if (shape.type === "segment") {
+    return (
+      <div className="shape-props">
+        <h3>Đoạn thẳng</h3>
+        <div className="prop-grid">
+          <NumberField label="Độ dài" value={shape.length} onChange={(v) => updateShape({ length: v })} />
+          <label className="field compact"><span>Đơn vị</span><input value={shape.unit} onChange={(e) => updateShape({ unit: e.target.value })} /></label>
+        </div>
+        <label className="check"><input type="checkbox" checked={shape.showLength} onChange={(e) => updateShape({ showLength: e.target.checked })} /> Hiện độ dài</label>
+        <div className="prop-grid">
+          <label className="field compact"><span>Điểm 1</span><input value={shape.labelA} onChange={(e) => updateShape({ labelA: e.target.value })} /></label>
+          <label className="field compact"><span>Điểm 2</span><input value={shape.labelB} onChange={(e) => updateShape({ labelB: e.target.value })} /></label>
+        </div>
+      </div>
+    );
+  }
+  if (shape.type === "point") {
+    return <div className="shape-props"><h3>Điểm</h3><label className="field"><span>Tên điểm</span><input value={shape.label} onChange={(e) => updateShape({ label: e.target.value })} /></label></div>;
+  }
+  if (shape.type === "graph") {
+    return <div className="shape-props"><h3>Đồ thị</h3><label className="field"><span>Hàm y =</span><input value={shape.expr} onChange={(e) => updateShape({ expr: e.target.value })} /></label><p className="muted">Ví dụ: x^2/4 - 2, 2*x+1, sin(x)</p></div>;
+  }
+  return <div className="shape-props"><h3>{shape.type}</h3><p className="muted">Đã chọn hình. Có thể xoá bằng Delete.</p></div>;
+}
+
+function QuickMathSymbols({ onPick }) {
+  const items = ["√", "²", "³", "∞", "≈", "≠", "≥", "≤", "±", "×", "∠ABC", "△ABC", "⊥", "∈", "∉", "⇒", "Σ", "α", "β"];
+  const templates = ["a/b", "sqrt(x)", "x^2", "Delta", "S = 1/2 * a * h", "C = 2*pi*R"];
+  return (
+    <div className="quick-symbols">
+      <h3>Ký hiệu nhanh</h3>
+      <div className="symbol-grid">{items.map((it) => <button key={it} onClick={() => onPick?.(it)}>{it}</button>)}</div>
+      <h3>Công thức mẫu</h3>
+      <div className="template-list">{templates.map((it) => <button key={it} onClick={() => onPick?.(it)}>{it}</button>)}</div>
+    </div>
+  );
+}
+
+export default App;

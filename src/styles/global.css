@@ -1,0 +1,528 @@
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #0f172a;
+  background: #eef2f7;
+  font-synthesis: none;
+  text-rendering: geometricPrecision;
+}
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 1180px; background: #eef2f7; }
+button, input, textarea, select { font: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; opacity: .45; }
+.app-shell { height: 100vh; display: grid; grid-template-rows: 72px 1fr; overflow: hidden; }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 12px 20px; background: rgba(255,255,255,.96); border-bottom: 1px solid #dbe3ef; box-shadow: 0 8px 24px rgba(15,23,42,.04); z-index: 10; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand-mark { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: #0f172a; color: white; font-size: 28px; font-weight: 900; }
+.brand h1 { margin: 0; font-size: 23px; letter-spacing: -.03em; }
+.brand p { margin: 2px 0 0; color: #64748b; font-size: 14px; }
+.badge { padding: 5px 12px; border-radius: 999px; color: #166534; background: #dcfce7; font-weight: 900; font-size: 13px; }
+.top-actions { display: flex; align-items: center; gap: 10px; }
+.soft-btn, .tool, .wide-btn, .toggle, .shape-buttons button, .template-list button, .symbol-grid button, .icon-danger { border: 1px solid #dbe3ef; background: white; color: #0f172a; border-radius: 12px; padding: 10px 14px; font-weight: 800; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+.soft-btn:hover, .tool:hover, .wide-btn:hover, .toggle:hover, .shape-buttons button:hover, .template-list button:hover, .symbol-grid button:hover { border-color: #94a3b8; background: #f8fafc; }
+.save-dot { color: #64748b; font-weight: 800; font-size: 14px; }
+.save-dot::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 6px; border-radius: 50%; background: #22c55e; }
+.workspace { display: grid; grid-template-columns: 260px 1fr 310px; min-height: 0; }
+.left-panel, .right-panel { min-height: 0; overflow: auto; background: #f8fafc; border-right: 1px solid #dbe3ef; padding: 16px; }
+.right-panel { border-right: 0; border-left: 1px solid #dbe3ef; }
+.left-panel h2, .right-panel h2 { margin: 4px 0 14px; font-size: 22px; letter-spacing: -.02em; }
+.page-list { display: grid; gap: 10px; margin-bottom: 12px; }
+.page-card { width: 100%; display: grid; grid-template-columns: 62px 1fr; gap: 12px; align-items: center; padding: 10px; border: 1px solid #dbe3ef; background: #fff; border-radius: 12px; text-align: left; }
+.page-card.active { border-color: #0f172a; box-shadow: 0 0 0 2px rgba(15,23,42,.08); }
+.page-card strong { display: block; font-size: 16px; margin-bottom: 4px; }
+.page-card small { color: #64748b; }
+.page-thumb { height: 78px; background: #fff; border: 1px solid #dbe3ef; border-radius: 6px; position: relative; overflow: hidden; }
+.mini { position: absolute; background: #cbd5e1; border-radius: 3px; }
+.mini:nth-child(1) { left: 10px; top: 12px; width: 42px; height: 8px; }
+.mini:nth-child(2) { left: 12px; top: 30px; width: 32px; height: 18px; }
+.mini:nth-child(3) { left: 16px; top: 55px; width: 36px; height: 5px; }
+.mini-math { background: #0f172a; }
+.mini-geometry { background: #2563eb; }
+.wide-btn { width: 100%; margin: 6px 0; font-size: 16px; }
+.wide-btn.danger, .icon-danger { color: #e11d48; border-color: #fecdd3; background: #fff5f7; }
+.side-note, .empty-state { margin-top: 16px; padding: 14px; border: 1px solid #dbe3ef; border-radius: 14px; background: #fff; color: #475569; line-height: 1.45; }
+.side-note strong, .empty-state strong { color: #0f172a; }
+.center-pane { min-width: 0; display: grid; grid-template-rows: 64px 1fr; background: #e7edf5; }
+.main-toolbar { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: rgba(255,255,255,.82); border-bottom: 1px solid #dbe3ef; overflow-x: auto; }
+.tool.active, .toggle.active { color: white; background: #0f172a; border-color: #0f172a; }
+.toolbar-hint { margin-left: auto; color: #64748b; font-size: 13px; white-space: nowrap; }
+.canvas-scroll { min-height: 0; overflow: auto; padding: 22px 36px 80px; }
+.page-label { width: 794px; margin: 0 auto 8px; color: #64748b; font-weight: 900; }
+.page { position: relative; margin: 0 auto; background: #fff; box-shadow: 0 20px 70px rgba(15,23,42,.16); border: 1px solid #cbd5e1; overflow: hidden; }
+.editor-object { position: absolute; border: 1px solid transparent; border-radius: 8px; user-select: none; }
+.editor-object.selected { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,.14); background: rgba(37,99,235,.02); }
+.editor-object.text, .editor-object.math { padding: 8px; }
+.text-box { width: 100%; min-height: 100%; outline: 0; white-space: pre-wrap; line-height: 1.45; user-select: text; cursor: text; }
+.math-box { min-height: 100%; display: flex; align-items: center; justify-content: inherit; gap: .18em; flex-wrap: wrap; line-height: 1.18; font-family: Georgia, "Times New Roman", serif; font-weight: 700; user-select: text; cursor: text; }
+.math-editor { display: grid; gap: 6px; background: #fff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 8px; box-shadow: 0 14px 32px rgba(15,23,42,.1); }
+.math-editor textarea, .field textarea { width: 100%; min-height: 84px; border: 1px solid #dbe3ef; border-radius: 10px; padding: 10px; resize: vertical; outline: none; }
+.math-editor small, .muted { color: #64748b; font-size: 13px; }
+.math-frac { display: inline-grid; grid-template-rows: auto auto; vertical-align: middle; text-align: center; margin: 0 .12em; line-height: 1; }
+.math-frac-top { padding: 0 .15em .07em; border-bottom: 2px solid currentColor; }
+.math-frac-bottom { padding: .07em .15em 0; }
+.math-sqrt { display: inline-flex; align-items: flex-start; margin: 0 .1em; }
+.math-root { font-size: 1.08em; margin-right: .03em; }
+.math-radicand { border-top: 2px solid currentColor; padding: 0 .12em; }
+sup { font-size: .62em; line-height: 0; }
+.geometry-frame { width: 100%; height: 100%; min-height: inherit; border-radius: 7px; background: #fff; overflow: hidden; cursor: move; }
+.geometry-frame svg { display: block; width: 100%; height: 100%; }
+.geo-bg { fill: #fff; stroke: #cbd5e1; stroke-width: 1; }
+.grid-line { stroke: #e2e8f0; stroke-width: 1; }
+.axes line { stroke: #0f172a; stroke-width: 1.4; }
+.axes text { fill: #0f172a; font-size: 14px; font-weight: 800; }
+.shape-hit { cursor: pointer; }
+.shape-hit line, .shape-hit polygon, .shape-hit rect, .shape-hit circle { stroke: #0f172a; stroke-width: 2.6; fill: rgba(255,255,255,.72); vector-effect: non-scaling-stroke; }
+.shape-hit circle { fill: #fff; }
+.shape-hit text { fill: #0f172a; font-size: 16px; font-weight: 900; user-select: none; }
+.length-label { fill: #2563eb !important; font-size: 15px !important; }
+.selected-shape line, .selected-shape polygon, .selected-shape rect, .selected-shape circle, .selected-shape.graph-line { stroke: #2563eb; }
+.graph-line { fill: none !important; stroke: #2563eb !important; stroke-width: 3 !important; }
+.resize-handle { position: absolute; width: 13px; height: 13px; border: 2px solid #2563eb; background: #fff; border-radius: 999px; z-index: 5; }
+.resize-handle.nw { left: -7px; top: -7px; cursor: nwse-resize; }
+.resize-handle.ne { right: -7px; top: -7px; cursor: nesw-resize; }
+.resize-handle.sw { left: -7px; bottom: -7px; cursor: nesw-resize; }
+.resize-handle.se { right: -7px; bottom: -7px; cursor: nwse-resize; }
+.panel-title-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.panel-section { margin-top: 16px; padding-top: 14px; border-top: 1px solid #dbe3ef; }
+.panel-section h3, .quick-symbols h3 { margin: 0 0 10px; font-size: 16px; }
+.prop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.field { display: grid; gap: 6px; margin-bottom: 10px; }
+.field span { color: #475569; font-size: 13px; font-weight: 900; }
+.field input, .field select { width: 100%; border: 1px solid #dbe3ef; border-radius: 10px; padding: 9px 10px; outline: 0; background: #fff; }
+.field input:focus, .field textarea:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+.field.compact { margin-bottom: 0; }
+.button-row, .shape-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.toggle { min-width: 44px; padding: 9px 10px; }
+.check { display: flex; gap: 8px; align-items: center; margin: 10px 0; color: #334155; font-weight: 800; }
+.shape-buttons { display: grid; grid-template-columns: 1fr 1fr; }
+.shape-buttons button { padding: 9px; }
+.shape-props { margin-top: 12px; border: 1px solid #dbe3ef; border-radius: 14px; padding: 12px; background: #fff; }
+.quick-symbols { margin-top: 16px; }
+.symbol-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.symbol-grid button { min-height: 42px; font-size: 19px; padding: 6px; }
+.template-list { display: grid; gap: 8px; }
+.template-list button { width: 100%; text-align: left; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.math-preview { min-height: 56px; padding: 12px; border-radius: 12px; background: #fff; border: 1px dashed #cbd5e1; font-family: Georgia, "Times New Roman", serif; font-size: 22px; font-weight: 700; overflow: auto; }
+@media print {
+  body { background: white; min-width: 0; }
+  .topbar, .left-panel, .right-panel, .main-toolbar, .page-label { display: none !important; }
+  .app-shell, .workspace, .center-pane, .canvas-scroll { display: block; height: auto; overflow: visible; padding: 0; background: white; }
+  .page { margin: 0; box-shadow: none; border: 0; page-break-after: always; }
+  .editor-object.selected { border-color: transparent; box-shadow: none; background: transparent; }
+  .resize-handle { display: none; }
+}
+
+/* FIX SCROLL - chỉ sửa cuộn, không đổi logic app */
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.app-shell {
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.workspace {
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.center-pane {
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.main-toolbar {
+  flex-shrink: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.canvas-scroll {
+  height: 100%;
+  min-height: 0;
+  overflow: auto !important;
+  overscroll-behavior: contain;
+  padding-bottom: 180px;
+}
+
+.page {
+  margin-bottom: 160px;
+}
+
+.left-panel,
+.right-panel {
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* PATCH: ô viết + công thức chung */
+.hybrid-writer {
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  border: 0;
+  outline: 0;
+  resize: none;
+  background: transparent;
+  line-height: 1.45;
+  color: #0f172a;
+}
+
+.rich-text-box {
+  width: 100%;
+  height: 100%;
+  white-space: pre-wrap;
+  line-height: 1.45;
+  cursor: text;
+  overflow: hidden;
+}
+
+.rich-line {
+  min-height: 1.45em;
+}
+
+.inline-math {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .08em;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 700;
+}
+
+/* PATCH: đồ thị, số trục, điểm tọa độ */
+.guide-line {
+  stroke: #2563eb !important;
+  stroke-width: 1.4 !important;
+  stroke-dasharray: 5 5;
+  fill: none !important;
+}
+
+.axes text {
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.axes line {
+  vector-effect: non-scaling-stroke;
+}
+
+/* PATCH: bỏ mẫu + viết live */
+.hybrid-live-editor {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-rows: minmax(70px, 1fr) auto;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.hybrid-writer {
+  width: 100%;
+  height: 100%;
+  min-height: 70px;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  outline: 0;
+  resize: none;
+  background: #fff;
+  line-height: 1.45;
+  color: #0f172a;
+  padding: 8px 10px;
+}
+
+.hybrid-preview {
+  min-height: 42px;
+  max-height: 45%;
+  overflow: auto;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  line-height: 1.45;
+}
+
+.placeholder-text {
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.graph-list {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.graph-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: end;
+}
+
+.mini-danger {
+  border: 1px solid #fecdd3;
+  background: #fff1f2;
+  color: #e11d48;
+  border-radius: 10px;
+  padding: 9px 10px;
+  font-weight: 900;
+}
+
+.wide-mini {
+  width: 100%;
+  margin: 8px 0;
+}
+
+/* PATCH: viết như Word hơn, không lộ text box */
+.editor-object.text {
+  border-color: transparent !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.editor-object.text.selected {
+  border-color: transparent !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.editor-object.text .resize-handle {
+  display: none !important;
+}
+
+.text-box,
+.rich-text-box,
+.hybrid-live-editor {
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.hybrid-writer {
+  border: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+.hybrid-preview {
+  border: 0 !important;
+  background: transparent !important;
+  padding: 6px 0 0 !important;
+}
+
+/* PATCH: số trục hiện rõ */
+.axis-number,
+.axis-label,
+.axes text {
+  fill: #0f172a !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  paint-order: stroke;
+  stroke: white;
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+
+.axis-tick,
+.axes line {
+  stroke: #0f172a !important;
+  stroke-width: 1.2 !important;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Double click khung Oxy để thêm điểm tại vị trí bấm */
+.geometry-frame {
+  cursor: crosshair;
+}
+
+/* PATCH: Word writer - viết thường, công thức tự hiện trong cùng vùng */
+.word-writer,
+.word-read {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background: transparent !important;
+  border: 0 !important;
+  line-height: 1.55;
+  color: #0f172a;
+}
+
+.word-render-layer {
+  position: absolute;
+  inset: 0;
+  white-space: pre-wrap;
+  pointer-events: none;
+  z-index: 1;
+  line-height: 1.55;
+}
+
+.word-input-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0 !important;
+  outline: 0 !important;
+  resize: none;
+  background: transparent !important;
+  color: transparent;
+  caret-color: #0f172a;
+  z-index: 2;
+  line-height: 1.55;
+  padding: 0;
+  overflow: hidden;
+}
+
+.word-input-layer::selection {
+  background: rgba(37, 99, 235, .22);
+  color: transparent;
+}
+
+.word-line {
+  min-height: 1.55em;
+}
+
+.inline-math {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  gap: .08em;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.placeholder-text {
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.editor-object.text,
+.editor-object.text.selected {
+  border-color: transparent !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.editor-object.text .resize-handle {
+  display: none !important;
+}
+
+/* PATCH FIX: vùng viết thật như Word, không dùng overlay/preview */
+.word-content-editor {
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  outline: 0;
+  border: 0 !important;
+  background: transparent !important;
+  white-space: pre-wrap;
+  line-height: 1.55;
+  cursor: text;
+  color: #0f172a;
+  padding: 0;
+}
+
+.word-content-editor:empty::before {
+  content: "Gõ bài ở đây: a/b, sqrt(x), x^2...";
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.ce-line {
+  min-height: 1.55em;
+}
+
+.ce-math {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  gap: .08em;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 800;
+  line-height: 1.12;
+  cursor: pointer;
+  padding: 0 .04em;
+}
+
+.ce-math:hover {
+  background: rgba(37, 99, 235, .08);
+  border-radius: 4px;
+}
+
+.ce-frac {
+  display: inline-grid;
+  grid-template-rows: auto auto;
+  text-align: center;
+  vertical-align: middle;
+  margin: 0 .08em;
+  line-height: 1;
+}
+
+.ce-frac-top {
+  border-bottom: 1.7px solid currentColor;
+  padding: 0 .15em .05em;
+}
+
+.ce-frac-bottom {
+  padding: .05em .15em 0;
+}
+
+.ce-sqrt {
+  display: inline-flex;
+  align-items: flex-start;
+}
+
+.ce-radicand {
+  border-top: 1.7px solid currentColor;
+  padding: 0 .12em;
+}
+
+.editor-object.text,
+.editor-object.text.selected {
+  border-color: transparent !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.editor-object.text .resize-handle {
+  display: none !important;
+}
+
+/* PATCH FIX: kéo sửa điểm/đỉnh hình */
+.point-handle {
+  cursor: grab;
+  fill: #fff !important;
+  stroke: #0f172a !important;
+  stroke-width: 2.4 !important;
+}
+
+.point-handle:active {
+  cursor: grabbing;
+}
+
+.geo-mark {
+  fill: #2563eb !important;
+  font-size: 17px !important;
+  font-weight: 900 !important;
+  paint-order: stroke;
+  stroke: white;
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+
+.length-label {
+  paint-order: stroke;
+  stroke: white;
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
