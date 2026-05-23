@@ -1279,3 +1279,38 @@ button {
 }
 
 /* RESPONSIVE POLISH OVERRIDES END */
+
+/* INLINE MATH INSERT POLISH START */
+
+/* Ký hiệu/công thức chèn vào editor không bị to, không lộ nút keyboard/menu */
+.mws-editor-content math-field,
+.mws-editor-preview math-field {
+  font-size: 1em !important;
+  line-height: 1.15 !important;
+  min-width: 0.8em !important;
+  min-height: 1.15em !important;
+  margin: 0 0.08em !important;
+  padding: 0 !important;
+  vertical-align: -0.08em !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Ẩn nút bàn phím/menu của MathLive để công thức nhìn như chữ trong Word */
+.mws-editor-content math-field::part(virtual-keyboard-toggle),
+.mws-editor-content math-field::part(menu-toggle),
+.mws-editor-preview math-field::part(virtual-keyboard-toggle),
+.mws-editor-preview math-field::part(menu-toggle) {
+  display: none !important;
+}
+
+/* Khi đang focus vẫn chỉ highlight nhẹ, không phình to */
+.mws-editor-content math-field:focus,
+.mws-editor-content math-field:focus-within {
+  outline: 1px solid rgba(37, 99, 235, 0.35) !important;
+  outline-offset: 2px !important;
+  border-radius: 4px !important;
+}
+
+/* INLINE MATH INSERT POLISH END */

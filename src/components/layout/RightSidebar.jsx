@@ -90,6 +90,7 @@ export default function RightSidebar({
                 key={symbol}
                 type="button"
                 className="mws-chip"
+                onMouseDown={(event) => event.preventDefault()}
                 onClick={() => onInsertSymbol(symbol)}
               >
                 {symbol}
@@ -110,6 +111,7 @@ export default function RightSidebar({
                 key={formula}
                 type="button"
                 className="mws-list-btn"
+                onMouseDown={(event) => event.preventDefault()}
                 onClick={() => onInsertFormula(formula)}
               >
                 {formula}
@@ -130,6 +132,7 @@ export default function RightSidebar({
                 key={template.name}
                 type="button"
                 className="mws-list-btn"
+                onMouseDown={(event) => event.preventDefault()}
                 onClick={() => onInsertTemplate(template)}
               >
                 {template.name}
