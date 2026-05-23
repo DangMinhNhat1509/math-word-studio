@@ -1,11 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
-
 import { SYMBOLS, FORMULAS, TEMPLATES } from "./data/mathData";
 import { useEditorSelection } from "./hooks/useEditorSelection";
 import { useDocumentPages } from "./hooks/useDocumentPages";
 import { useGeometryEditor } from "./hooks/useGeometryEditor";
 import { getSavedAt } from "./utils/documentStorage";
-
 import {
   copyHtml,
   copyPlainText,
@@ -13,7 +11,6 @@ import {
   printPdf,
   runCommand,
 } from "./utils/editorCommands";
-
 import { insertInlineMathField } from "./utils/mathLiveEditor";
 import { cleanEditorFormat } from "./utils/pasteCleaner";
 
@@ -61,7 +58,6 @@ export default function App() {
   });
 
   const {
-    figures,
     activeFigure,
     addFigure,
     selectFigure,
@@ -111,9 +107,8 @@ export default function App() {
 
   function insertTextBox() {
     setActiveTool("textbox");
-
     insertHtml(
-      `<span class="word-textbox" contenteditable="true">Nhập nội dung khung...</span>&nbsp;`,
+      `<div style="padding:12px 14px;border:1.5px dashed #c7d2fe;border-radius:14px;background:#f8fbff;min-height:54px;">Nhập nội dung khung...</div>`,
       "Đã chèn khung chữ"
     );
   }
@@ -142,10 +137,8 @@ export default function App() {
     printPdf({ saveDocument: () => {} });
   }
 
-
   function isEditableShortcutTarget(target) {
     if (!target) return false;
-
     const tag = target.tagName;
 
     return (
@@ -181,43 +174,49 @@ export default function App() {
 
       if ((event.ctrlKey || event.metaKey) && event.shiftKey && key === "f") {
         event.preventDefault();
-
-        if (!isEditableShortcutTarget(event.target) || editorRef.current?.contains(event.target)) {
+        if (
+          !isEditableShortcutTarget(event.target) ||
+          editorRef.current?.contains(event.target)
+        ) {
           cleanFormat();
         }
       }
     }
 
     window.addEventListener("keydown", handleGlobalShortcuts);
-
     return () => window.removeEventListener("keydown", handleGlobalShortcuts);
-  });
+  }, [saveDocument]);
 
   if (!currentPage) {
-    return <div className="app">Đang tải tài liệu...</div>;
+    return <div className="mws-loading-screen">Đang tải tài liệu...</div>;
   }
 
   return (
-    <div className="app">
-      <Topbar />
+    <div className="mws-app-shell">
+      <Topbar
+        savedAt={savedAt}
+        status={status}
+        onSave={saveDocument}
+        onPrint={handlePrint}
+        onCopyText={handleCopyText}
+        onCopyHtml={handleCopyHtml}
+        onReset={resetDocument}
+      />
 
-      <div className="layout">
-        <LeftSidebar
-          pages={pages}
-          currentPageId={currentPageId}
-          status={status}
-          savedAt={savedAt}
-          onSelectPage={selectPage}
-          onAddPage={addPage}
-          onDeletePage={deleteCurrentPage}
-          onSave={saveDocument}
-          onCopyText={handleCopyText}
-          onCopyHtml={handleCopyHtml}
-          onPrint={handlePrint}
-          onReset={resetDocument}
-        />
+      <div className="mws-app-layout">
+        <aside className="mws-left-column">
+          <LeftSidebar
+            pages={pages}
+            currentPageId={currentPageId}
+            status={status}
+            savedAt={savedAt}
+            onSelectPage={selectPage}
+            onAddPage={addPage}
+            onDeletePage={deleteCurrentPage}
+          />
+        </aside>
 
-        <main className="main">
+        <main className="mws-center-column">
           <Toolbar
             activeTool={activeTool}
             setActiveTool={setActiveTool}
@@ -225,7 +224,10 @@ export default function App() {
             onItalic={() => runCommand("italic")}
             onUnderline={() => runCommand("underline")}
             onHighlight={() =>
-              insertHtml(`<span class="highlight">nội dung cần nhấn mạnh</span>`, "Đã chèn highlight")
+              insertHtml(
+                `<mark style="background:#fff2a8;padding:0 4px;border-radius:4px;">nội dung cần nhấn mạnh</mark>`,
+                "Đã chèn highlight"
+              )
             }
             onAlignLeft={() => runCommand("justifyLeft")}
             onAlignCenter={() => runCommand("justifyCenter")}
@@ -257,21 +259,22 @@ export default function App() {
           />
         </main>
 
-        <RightSidebar
-          symbols={SYMBOLS}
-          formulas={FORMULAS}
-          templates={TEMPLATES}
-          figures={figures}
-          activeFigure={activeFigure}
-          onSelectFigure={(figureId) => selectFigure(currentPageId, figureId)}
-          onUpdateFigure={updateActiveFigure}
-          onDeleteFigure={(figureId) => deleteFigure(currentPageId, figureId)}
-          onDeselectFigure={() => deselectFigure(currentPageId)}
-          onClearFigure={clearActiveFigure}
-          onInsertSymbol={(symbol) => insertSmartFormula(symbol)}
-          onInsertFormula={(formula) => insertSmartFormula(formula)}
-          onInsertTemplate={(template) => insertHtml(template.html, `Đã chèn mẫu: ${template.name}`)}
-        />
+        <aside className="mws-right-column">
+          <RightSidebar
+            symbols={SYMBOLS}
+            formulas={FORMULAS}
+            templates={TEMPLATES}
+            activeFigure={activeFigure}
+            onDeleteFigure={(figureId) => deleteFigure(currentPageId, figureId)}
+            onDeselectFigure={() => deselectFigure(currentPageId)}
+            onClearFigure={clearActiveFigure}
+            onInsertSymbol={(symbol) => insertSmartFormula(symbol)}
+            onInsertFormula={(formula) => insertSmartFormula(formula)}
+            onInsertTemplate={(template) =>
+              insertHtml(template.html, `Đã chèn mẫu: ${template.name}`)
+            }
+          />
+        </aside>
       </div>
     </div>
   );
