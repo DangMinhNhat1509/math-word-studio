@@ -1314,3 +1314,69 @@ button {
 }
 
 /* INLINE MATH INSERT POLISH END */
+
+/* MATHLIVE UNIFORM POLISH START */
+
+/* Công thức nhanh và công thức tự gõ dùng cùng một nhịp chữ */
+.mws-formula {
+  display: inline-flex !important;
+  align-items: baseline !important;
+  vertical-align: -0.08em !important;
+  margin: 0 0.08em !important;
+  padding: 0 !important;
+  border-radius: 5px !important;
+  background: transparent !important;
+  color: inherit !important;
+  line-height: 1 !important;
+}
+
+.mws-formula.is-editing {
+  background: rgba(37, 99, 235, 0.07) !important;
+}
+
+.mws-editor-content math-field,
+.mws-editor-preview math-field,
+.mws-math {
+  display: inline-block !important;
+  vertical-align: -0.08em !important;
+  font-size: 1em !important;
+  line-height: 1 !important;
+  min-width: 0.6em !important;
+  min-height: 1em !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  color: inherit !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Ẩn nút keyboard/menu của MathLive để không lòi icon xanh trong bài */
+.mws-editor-content math-field::part(virtual-keyboard-toggle),
+.mws-editor-content math-field::part(menu-toggle),
+.mws-editor-preview math-field::part(virtual-keyboard-toggle),
+.mws-editor-preview math-field::part(menu-toggle),
+.mws-math::part(virtual-keyboard-toggle),
+.mws-math::part(menu-toggle) {
+  display: none !important;
+}
+
+/* Khi focus không bôi đen to, chỉ viền nhẹ */
+.mws-editor-content math-field:focus,
+.mws-editor-content math-field:focus-within,
+.mws-math:focus,
+.mws-math:focus-within {
+  outline: 1px solid rgba(37, 99, 235, 0.28) !important;
+  outline-offset: 2px !important;
+  border-radius: 4px !important;
+  background: transparent !important;
+}
+
+/* Giảm màu selection mặc định để không thấy như bị bôi đen */
+.mws-editor-content math-field::selection,
+.mws-math::selection {
+  background: rgba(37, 99, 235, 0.16) !important;
+}
+
+/* MATHLIVE UNIFORM POLISH END */

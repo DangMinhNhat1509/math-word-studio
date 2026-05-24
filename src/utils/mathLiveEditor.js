@@ -74,6 +74,12 @@ export function textToLatex(input = "") {
     .replaceAll("β", "\\beta");
 
   text = text
+    .replace(/>=/g, "\\ge")
+    .replace(/<=/g, "\\le")
+    .replace(/!=/g, "\\ne")
+    .replace(/=>/g, "\\Rightarrow");
+
+  text = text
     .replace(/căn\s*\(([^()]+)\)/gi, "\\sqrt{$1}")
     .replace(/sqrt\s*\(([^()]+)\)/gi, "\\sqrt{$1}")
     .replace(/√\s*\(([^()]+)\)/g, "\\sqrt{$1}")
@@ -96,15 +102,21 @@ export function textToLatex(input = "") {
     .replace(/([A-Za-z0-9)\]}])\^(-?\d+)/g, "$1^{$2}")
     .replace(/([A-Za-z])_(-?\d+)/g, "$1_{$2}");
 
-  text = text.replace(/\(([^()]+)\)\s*\/\s*\(([^()]+)\)/g, "\\frac{$1}{$2}");
-  text = text.replace(/\(([^()]+)\)\s*\/\s*([A-Za-z0-9]+(?:\^\{\d+\})?)/g, "\\frac{$1}{$2}");
-  text = text.replace(/(^|[\s=+\-*])(\d+(?:[.,]\d+)?)\s*\/\s*(\d+(?:[.,]\d+)?)/g, "$1\\frac{$2}{$3}");
+  for (let index = 0; index < 3; index += 1) {
+    text = text.replace(/\(([^()]+)\)\s*\/\s*\(([^()]+)\)/g, "\\frac{$1}{$2}");
+    text = text.replace(/\(([^()]+)\)\s*\/\s*([A-Za-z0-9]+(?:\^\{\d+\})?)/g, "\\frac{$1}{$2}");
+    text = text.replace(/([A-Za-z0-9]+(?:\^\{\d+\})?)\s*\/\s*\(([^()]+)\)/g, "\\frac{$1}{$2}");
+    text = text.replace(/(^|[\s=+\-*])(\d+(?:[.,]\d+)?|[A-Za-z]+[A-Za-z0-9]*)\s*\/\s*(\d+(?:[.,]\d+)?|[A-Za-z]+[A-Za-z0-9]*)/g, "$1\\frac{$2}{$3}");
+  }
 
-  text = text.replace(/(\d+(?:[.,]\d+)?)\s*(cm|mm|dm|m|km)(\^\{?\d+\}?|²|³)?\b/g, (_, n, unit, power = "") => {
-    if (power === "²") power = "^{2}";
-    if (power === "³") power = "^{3}";
-    return `${n}\\,\\mathrm{${unit}}${power}`;
-  });
+  text = text.replace(
+    /(\d+(?:[.,]\d+)?)\s*(cm|mm|dm|m|km)(\^\{?\d+\}?|²|³)?\b/g,
+    (_, n, unit, power = "") => {
+      if (power === "²") power = "^{2}";
+      if (power === "³") power = "^{3}";
+      return `${n}\\,\\mathrm{${unit}}${power}`;
+    }
+  );
 
   return text.replace(/\s+/g, " ").trim();
 }
@@ -134,10 +146,9 @@ function placeCaretInside(node) {
 function insertParagraphAfterMathField(field) {
   const wrapper = field.closest(".mws-formula") || field;
   const block = wrapper.closest("p, div, li") || wrapper;
-
   const p = document.createElement("p");
-  p.innerHTML = "<br>";
 
+  p.innerHTML = "<br>";
   block.after(p);
   placeCaretInside(p);
 }
@@ -152,6 +163,7 @@ function prepareOneMathField(field) {
     field.smartFence = true;
     field.smartSuperscript = true;
     field.virtualKeyboardPolicy = "manual";
+    field.menuItems = [];
   } catch {}
 
   const latex = field.dataset.latex || field.getAttribute("value") || field.textContent || "";
@@ -168,9 +180,18 @@ function prepareOneMathField(field) {
 
   field.addEventListener("input", () => {
     const value = field.value || "";
+
     field.dataset.latex = value;
     field.setAttribute("data-latex", value);
     field.setAttribute("value", value);
+  });
+
+  field.addEventListener("blur", () => {
+    field.closest(".mws-formula")?.classList.remove("is-editing");
+  });
+
+  field.addEventListener("focus", () => {
+    field.closest(".mws-formula")?.classList.add("is-editing");
   });
 
   field.addEventListener("keydown", (event) => {
@@ -183,18 +204,20 @@ function prepareOneMathField(field) {
     if (event.key === "Escape") {
       event.preventDefault();
       placeCaretAfter(field.closest(".mws-formula") || field);
+      field.blur();
     }
   });
 }
 
 function makeMathField(rawValue = "", focus = false) {
   const latex = textToLatex(rawValue);
-
   const wrapper = document.createElement("span");
+
   wrapper.className = "mws-formula";
   wrapper.setAttribute("contenteditable", "false");
 
   const field = document.createElement("math-field");
+
   field.className = "mws-math";
   field.setAttribute("smart-mode", "on");
   field.setAttribute("smart-fence", "on");
@@ -216,7 +239,9 @@ function makeMathField(rawValue = "", focus = false) {
     } catch {}
 
     if (focus) {
+      wrapper.classList.add("is-editing");
       field.focus();
+
       try {
         field.executeCommand?.("moveToMathfieldEnd");
       } catch {}
@@ -228,6 +253,7 @@ function makeMathField(rawValue = "", focus = false) {
 
 function getActiveMathField() {
   const active = document.activeElement;
+
   if (active?.tagName === "MATH-FIELD") return active;
   return null;
 }
@@ -244,6 +270,7 @@ function insertIntoMathField(field, value) {
   }
 
   const nextValue = field.value || field.getAttribute("value") || latex;
+
   field.dataset.latex = nextValue;
   field.setAttribute("data-latex", nextValue);
   field.setAttribute("value", nextValue);
@@ -274,7 +301,13 @@ export function syncMathFields(root) {
   if (!root) return;
 
   root.querySelectorAll("math-field").forEach((field) => {
-    const value = field.value || field.dataset.latex || field.getAttribute("value") || field.textContent || "";
+    const value =
+      field.value ||
+      field.dataset.latex ||
+      field.getAttribute("value") ||
+      field.textContent ||
+      "";
+
     field.dataset.latex = value;
     field.setAttribute("data-latex", value);
     field.setAttribute("value", value);
@@ -298,6 +331,7 @@ export function insertInlineMathField({
   }
 
   const editor = editorRef.current;
+
   if (!editor) return;
 
   editor.focus();
@@ -314,7 +348,7 @@ export function insertInlineMathField({
     range.collapse(false);
   }
 
-  const shouldFocus = value.trim() === "";
+  const shouldFocus = String(value || "").trim() === "";
   const formula = makeMathField(value, shouldFocus);
   const space = document.createTextNode("\u00A0");
 
@@ -324,11 +358,15 @@ export function insertInlineMathField({
 
   if (!shouldFocus) {
     placeCaretAfter(space);
+
+    requestAnimationFrame(() => {
+      editor.focus();
+      placeCaretAfter(space);
+    });
   }
 
   prepareEditorMath(editor);
   rememberSelection?.();
-
   setStatus?.("Đã chèn công thức tại đúng vị trí con trỏ");
 }
 
@@ -350,12 +388,15 @@ function findCurrentBlock(editor, node) {
 
 export function convertCurrentBlockToInlineMath(editor) {
   const selection = window.getSelection();
+
   if (!editor || !selection || selection.rangeCount === 0) return false;
 
   const block = findCurrentBlock(editor, selection.anchorNode);
+
   if (!block) return false;
 
   const source = (block.innerText || block.textContent || "").trim();
+
   if (!source) return false;
 
   const formula = makeMathField(source, false);
@@ -371,32 +412,109 @@ export function convertCurrentBlockToInlineMath(editor) {
   return true;
 }
 
+function isMathCandidate(text) {
+  const value = String(text || "").trim();
+
+  if (!value) return false;
+  if (value.length > 160) return false;
+
+  const hasMathSignal =
+    /\/|sqrt\s*\(|căn\s*\(|√|=|>=|<=|!=|=>|[≥≤≠≈±×÷^⁰¹²³⁴⁵⁶⁷⁸⁹]|\\/.test(value);
+
+  if (!hasMathSignal) return false;
+
+  const allowed = /^[A-Za-z0-9\sπ∞≈≠≤≥±×÷∠△⊥∥∈∉⇒⇔∑ΣαβΔ√.,;:(){}\[\]+\-*/^_=<>!]+$/u;
+
+  return allowed.test(value);
+}
+
+function findMathSuffix(before) {
+  const trailing = before.match(/\s*$/)?.[0] || "";
+  const body = before.slice(0, before.length - trailing.length);
+
+  if (!body.trim()) return null;
+
+  const starts = [];
+
+  for (let i = body.length - 1; i >= 0; i -= 1) {
+    const char = body[i];
+
+    if (i === 0) starts.push(0);
+
+    if (/\s/.test(char)) {
+      starts.push(i + 1);
+    }
+
+    if ("，,;:。".includes(char)) {
+      starts.push(i + 1);
+      break;
+    }
+
+    if (body.length - i > 160) break;
+  }
+
+  const uniqueStarts = [...new Set(starts)].sort((a, b) => a - b);
+
+  for (const start of uniqueStarts) {
+    const candidate = body.slice(start).trim();
+
+    if (isMathCandidate(candidate)) {
+      return {
+        raw: candidate,
+        start,
+        end: body.length,
+        trailing,
+      };
+    }
+  }
+
+  const simple = body.match(
+    /(?:^|[\s(])((?:[A-Za-z0-9]+|\([^()]+\))\s*\/\s*(?:[A-Za-z0-9]+|\([^()]+\))|sqrt\([^)]{1,80}\)|căn\([^)]{1,80}\)|√\([^)]{1,80}\)|√\s*[A-Za-z0-9]+|[A-Za-z0-9]+\^\d+)$/i
+  );
+
+  if (!simple) return null;
+
+  const raw = simple[1].trim();
+
+  return {
+    raw,
+    start: body.length - raw.length,
+    end: body.length,
+    trailing,
+  };
+}
+
 export function autoConvertTypedMathAtCaret(editor) {
   const selection = window.getSelection();
 
-  if (!editor || !selection || selection.rangeCount === 0 || !selection.isCollapsed) return false;
+  if (!editor || !selection || selection.rangeCount === 0 || !selection.isCollapsed) {
+    return false;
+  }
 
   const node = selection.anchorNode;
-  if (!node || node.nodeType !== Node.TEXT_NODE || !editor.contains(node)) return false;
-  if (node.parentElement?.closest?.(".mws-formula")) return false;
+
+  if (!node || node.nodeType !== Node.TEXT_NODE || !editor.contains(node)) {
+    return false;
+  }
+
+  if (node.parentElement?.closest?.(".mws-formula")) {
+    return false;
+  }
 
   const offset = selection.anchorOffset;
   const before = node.nodeValue.slice(0, offset);
-
-  const match = before.match(/(?:^|[\s(])((?:\d+|[A-Za-z])\s*\/\s*(?:\d+|[A-Za-z])|sqrt\([^)]{1,60}\)|căn\([^)]{1,60}\)|√\([^)]{1,60}\))$/i);
+  const match = findMathSuffix(before);
 
   if (!match) return false;
 
-  const raw = match[1].trim();
-  const start = offset - raw.length;
-
   const range = document.createRange();
-  range.setStart(node, start);
+
+  range.setStart(node, match.start);
   range.setEnd(node, offset);
   range.deleteContents();
 
-  const formula = makeMathField(raw, false);
-  const space = document.createTextNode("\u00A0");
+  const formula = makeMathField(match.raw, false);
+  const space = document.createTextNode(match.trailing || "\u00A0");
 
   range.insertNode(space);
   range.insertNode(formula);
@@ -416,7 +534,12 @@ export function getPlainTextWithMath(editor) {
 
   clone.querySelectorAll(".mws-formula").forEach((wrapper) => {
     const field = wrapper.querySelector("math-field");
-    const value = field?.dataset.latex || field?.getAttribute("value") || field?.textContent || "";
+    const value =
+      field?.dataset.latex ||
+      field?.getAttribute("value") ||
+      field?.textContent ||
+      "";
+
     wrapper.replaceWith(document.createTextNode(value));
   });
 
