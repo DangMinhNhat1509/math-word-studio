@@ -513,3 +513,36 @@
     width: min(794px, 100%) !important;
   }
 }
+
+/* Math field usability patch */
+.editor .mws-formula {
+  display: inline-flex !important;
+  align-items: center !important;
+  max-width: 100% !important;
+  min-width: 1.6em !important;
+  vertical-align: middle !important;
+}
+
+.editor .mws-formula.is-editing {
+  min-width: 72px !important;
+}
+
+.editor math-field.mws-math {
+  width: auto !important;
+  min-width: 1.8em !important;
+  max-width: 100% !important;
+  overflow: visible !important;
+  padding: 2px 4px !important;
+  border-radius: 6px !important;
+  line-height: 1.35 !important;
+}
+
+.editor .mws-formula.is-editing math-field.mws-math,
+.editor math-field.mws-math:focus,
+.editor math-field.mws-math:focus-within {
+  min-width: 88px !important;
+  background: #f8fbff !important;
+  outline: 1px solid rgba(37, 99, 235, 0.45) !important;
+  outline-offset: 1px !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08) !important;
+}
