@@ -1,7 +1,2 @@
-﻿@import "./styles/base.css";
-@import "./styles/layout.css";
-@import "./styles/editor.css";
-@import "./styles/diagram.css";
-@import "./styles/responsive.css";
-@import "./styles/theme-v5.css";
-@import "./styles/compact-responsive.css";
+﻿@import "./styles/diagram.css";
+@import "./styles/app-redesign.css";

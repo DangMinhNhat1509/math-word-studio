@@ -1,40 +1,29 @@
-import {
-  AlignCenter,
-  AlignLeft,
-  AlignRight,
-  Bold,
-  BoxSelect,
-  Eraser,
-  Highlighter,
-  Italic,
-  MousePointer2,
-  PenLine,
-  Plus,
-  Sigma,
-  SquareDashed,
-  Triangle,
-  Type,
-  Underline,
-} from "lucide-react";
+﻿import { ActionIcon, Button, Divider, Group, Kbd, Paper, ScrollArea, Text, Tooltip } from "@mantine/core";
+import { AlignCenter, AlignLeft, AlignRight, Bold, Braces, Eraser, Highlighter, Image, Italic, PenLine, Plus, Radical, Sigma, SquareDashed, Superscript, Table2, Triangle, Type, Underline } from "lucide-react";
 
-function ToolTab({ active, icon: Icon, label, onClick }) {
+function MainTool({ active, icon: Icon, label, onClick }) {
   return (
-    <button
-      type="button"
-      className={`mws-tool-tab ${active ? "is-active" : ""}`}
+    <Button
+      variant={active ? "light" : "subtle"}
+      color={active ? "blue" : "gray"}
+      radius="md"
+      size="sm"
+      className="mws-main-tool"
+      leftSection={<Icon size={18} />}
       onClick={onClick}
     >
-      <Icon size={18} />
-      <span>{label}</span>
-    </button>
+      {label}
+    </Button>
   );
 }
 
-function ToolIcon({ icon: Icon, title, onClick }) {
+function FormatTool({ icon: Icon, title, onClick }) {
   return (
-    <button type="button" className="mws-tool-icon" title={title} onClick={onClick}>
-      <Icon size={17} />
-    </button>
+    <Tooltip label={title}>
+      <ActionIcon variant="subtle" color="gray" radius="md" onClick={onClick}>
+        <Icon size={17} />
+      </ActionIcon>
+    </Tooltip>
   );
 }
 
@@ -55,89 +44,43 @@ export default function Toolbar({
   onCleanFormat,
 }) {
   return (
-    <section className="mws-toolbar-wrap">
-      <div className="mws-toolbar-top">
-        <div className="mws-tool-tabs">
-          <ToolTab
-            active={activeTool === "text"}
-            icon={Type}
-            label="Viết"
-            onClick={() => setActiveTool("text")}
-          />
-          <ToolTab
-            active={activeTool === "math"}
-            icon={Sigma}
-            label="Công thức"
-            onClick={onMath}
-          />
-          <ToolTab
-            active={activeTool === "select"}
-            icon={MousePointer2}
-            label="Chọn"
-            onClick={() => setActiveTool("select")}
-          />
-          <ToolTab
-            active={activeTool === "textbox"}
-            icon={SquareDashed}
-            label="Khung chữ"
-            onClick={onTextBox}
-          />
-          <ToolTab
-            active={activeTool === "geometry"}
-            icon={Triangle}
-            label="Hình học"
-            onClick={() => {
-              setActiveTool("geometry");
-              onAddFigure();
-            }}
-          />
-          <ToolTab
-            active={activeTool === "draw"}
-            icon={PenLine}
-            label="Vẽ tay"
-            onClick={() => {
-              setActiveTool("draw");
-              onDraw();
-            }}
-          />
-        </div>
+    <section className="mws-toolbar">
+      <Paper withBorder radius="xl" shadow="sm" className="mws-toolbar-card">
+        <ScrollArea type="never">
+          <Group gap={6} wrap="nowrap">
+            <MainTool active={activeTool === "text"} icon={Type} label="Chữ" onClick={() => setActiveTool("text")} />
+            <MainTool active={activeTool === "math"} icon={Sigma} label="Công thức" onClick={onMath} />
+            <MainTool icon={Braces} label="Phân số" onClick={onMath} />
+            <MainTool icon={Radical} label="Căn" onClick={onMath} />
+            <MainTool icon={Superscript} label="Mũ" onClick={onMath} />
 
-        <div className="mws-toolbar-hint">
-          Ctrl + S lưu · Ctrl + P in · Ctrl + Enter đổi dòng thành công thức
-        </div>
-      </div>
+            <MainTool active={activeTool === "geometry"} icon={Triangle} label="Hình học" onClick={() => { setActiveTool("geometry"); onAddFigure(); }} />
+            <MainTool active={activeTool === "draw"} icon={PenLine} label="Vẽ tay" onClick={() => { setActiveTool("draw"); onDraw(); }} />
 
-      <div className="mws-toolbar-bottom">
-        <div className="mws-tool-group">
-          <ToolIcon icon={Bold} title="Đậm" onClick={onBold} />
-          <ToolIcon icon={Italic} title="Nghiêng" onClick={onItalic} />
-          <ToolIcon icon={Underline} title="Gạch chân" onClick={onUnderline} />
-          <ToolIcon icon={Highlighter} title="Highlight" onClick={onHighlight} />
-        </div>
+            <Divider orientation="vertical" />
 
-        <div className="mws-tool-group">
-          <ToolIcon icon={AlignLeft} title="Căn trái" onClick={onAlignLeft} />
-          <ToolIcon icon={AlignCenter} title="Căn giữa" onClick={onAlignCenter} />
-          <ToolIcon icon={AlignRight} title="Căn phải" onClick={onAlignRight} />
-        </div>
+            <MainTool icon={Plus} label="Chèn" onClick={onTextBox} />
+            <MainTool icon={Table2} label="Bảng" onClick={onTextBox} />
+            <MainTool icon={Image} label="Ảnh" onClick={onTextBox} />
 
-        <div className="mws-tool-group">
-          <button type="button" className="mws-tool-inline-btn" onClick={onAddFigure}>
-            <Plus size={16} />
-            <span>Hình</span>
-          </button>
+            <Divider orientation="vertical" />
 
-          <button type="button" className="mws-tool-inline-btn" onClick={onTextBox}>
-            <BoxSelect size={16} />
-            <span>Khung</span>
-          </button>
+            <FormatTool icon={Bold} title="In đậm" onClick={onBold} />
+            <FormatTool icon={Italic} title="In nghiêng" onClick={onItalic} />
+            <FormatTool icon={Underline} title="Gạch chân" onClick={onUnderline} />
+            <FormatTool icon={Highlighter} title="Tô nổi bật" onClick={onHighlight} />
+            <FormatTool icon={AlignLeft} title="Căn trái" onClick={onAlignLeft} />
+            <FormatTool icon={AlignCenter} title="Căn giữa" onClick={onAlignCenter} />
+            <FormatTool icon={AlignRight} title="Căn phải" onClick={onAlignRight} />
+            <FormatTool icon={SquareDashed} title="Khung chữ" onClick={onTextBox} />
+            <FormatTool icon={Eraser} title="Dọn format" onClick={onCleanFormat} />
 
-          <button type="button" className="mws-tool-inline-btn" onClick={onCleanFormat}>
-            <Eraser size={16} />
-            <span>Dọn format</span>
-          </button>
-        </div>
-      </div>
+            <Text size="xs" c="dimmed" fw={700} className="mws-shortcuts">
+              <Kbd>Ctrl</Kbd> + <Kbd>S</Kbd> lưu · <Kbd>Ctrl</Kbd> + <Kbd>P</Kbd> PDF
+            </Text>
+          </Group>
+        </ScrollArea>
+      </Paper>
     </section>
   );
 }

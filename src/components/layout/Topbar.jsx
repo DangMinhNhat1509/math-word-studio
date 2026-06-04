@@ -1,13 +1,15 @@
-import {
-  Copy,
-  FileDown,
-  FolderOpen,
-  RotateCcw,
-  Save,
-  Sigma,
-} from "lucide-react";
+﻿import { ActionIcon, Avatar, Box, Button, Group, Menu, Text, ThemeIcon, Tooltip } from "@mantine/core";
+import { Cloud, Code2, Copy, Download, FileText, MoreHorizontal, RefreshCcw, RotateCcw, Save, Sparkles } from "lucide-react";
+
+const pageTitles = {
+  dashboard: "Trang chủ",
+  templates: "Mẫu đề",
+  documents: "Tài liệu",
+  editor: "Đề kiểm tra Toán 8 - Chương 1",
+};
 
 export default function Topbar({
+  activePage,
   savedAt,
   status,
   onSave,
@@ -18,59 +20,70 @@ export default function Topbar({
 }) {
   return (
     <header className="mws-topbar">
-      <div className="mws-brand">
-        <div className="mws-brand-mark">
-          <Sigma size={22} strokeWidth={2.6} />
-        </div>
+      <Group justify="space-between" h="100%" wrap="nowrap">
+        <Group gap="sm" wrap="nowrap" className="mws-brand">
+          <ThemeIcon size={42} radius="md" variant="gradient" gradient={{ from: "blue", to: "indigo" }}>
+            <Text fw={950} size="lg">M</Text>
+          </ThemeIcon>
+          <Box>
+            <Text fw={900} size="lg" lh={1} c="blue.8">Math Word Studio</Text>
+            <Text size="xs" c="dimmed" fw={650} mt={4}>{pageTitles[activePage] || "Soạn đề Toán A4"}</Text>
+          </Box>
+        </Group>
 
-        <div className="mws-brand-copy">
-          <div className="mws-brand-row">
-            <h1>Math Word Studio</h1>
-            <span className="mws-badge">MVP v4</span>
-          </div>
-          <p>Soạn bài · công thức · hình học · trắc nghiệm</p>
-        </div>
-      </div>
+        <Group gap={8} wrap="nowrap" className="mws-topbar-center">
+          <Tooltip label="Hoàn tác">
+            <ActionIcon variant="default" size="lg" radius="md"><RotateCcw size={17} /></ActionIcon>
+          </Tooltip>
+          <Tooltip label="Làm lại">
+            <ActionIcon variant="default" size="lg" radius="md"><RefreshCcw size={17} /></ActionIcon>
+          </Tooltip>
+          <Group gap={4} className="mws-zoom-control">
+            <ActionIcon variant="subtle" size="sm">−</ActionIcon>
+            <Text fw={850} size="sm">100%</Text>
+            <ActionIcon variant="subtle" size="sm">+</ActionIcon>
+          </Group>
+        </Group>
 
-      <div className="mws-topbar-center">
-        <div className="mws-doc-pill">
-          <span className="mws-doc-title">Tài liệu hiện tại</span>
-          <span className="mws-doc-meta">
-            {savedAt ? `Đã lưu: ${savedAt}` : status}
-          </span>
-        </div>
-      </div>
+        <Group gap="xs" wrap="nowrap" className="mws-topbar-actions">
+          <Group gap={6} className="mws-save-pill">
+            <Cloud size={15} />
+            <Text size="xs" fw={800}>{activePage === "editor" && savedAt ? `Đã lưu ${savedAt}` : "Đã sẵn sàng"}</Text>
+          </Group>
 
-      <div className="mws-topbar-actions">
-        <button className="mws-header-btn" onClick={onSave} type="button">
-          <Save size={17} />
-          <span>Lưu</span>
-        </button>
+          <Button variant="default" radius="md" leftSection={<Save size={16} />} onClick={onSave}>
+            Lưu
+          </Button>
 
-        <button
-          className="mws-header-btn mws-header-btn-primary"
-          onClick={onPrint}
-          type="button"
-        >
-          <FileDown size={17} />
-          <span>In/PDF</span>
-        </button>
+          <Button className="mws-hide-md" variant="light" radius="md" leftSection={<Copy size={16} />} onClick={onCopyText}>
+            Copy chữ
+          </Button>
 
-        <button className="mws-header-btn" onClick={onCopyText} type="button">
-          <Copy size={17} />
-          <span>Copy chữ</span>
-        </button>
+          <Button radius="md" leftSection={<Download size={16} />} onClick={onPrint} className="mws-export-btn">
+            Xuất PDF
+          </Button>
 
-        <button className="mws-header-btn" onClick={onCopyHtml} type="button">
-          <FolderOpen size={17} />
-          <span>Copy HTML</span>
-        </button>
+          <Menu shadow="md" width={210} position="bottom-end">
+            <Menu.Target>
+              <ActionIcon variant="default" size="lg" radius="md"><MoreHorizontal size={18} /></ActionIcon>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Label>Tài liệu</Menu.Label>
+              <Menu.Item leftSection={<Code2 size={15} />} onClick={onCopyHtml}>Copy HTML</Menu.Item>
+              <Menu.Item leftSection={<Sparkles size={15} />} onClick={onReset} color="red">Tạo lại tài liệu</Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
 
-        <button className="mws-header-btn mws-header-btn-danger" onClick={onReset} type="button">
-          <RotateCcw size={17} />
-          <span>Reset</span>
-        </button>
-      </div>
+          <Group gap={8} wrap="nowrap" className="mws-user">
+            <Avatar size={34} radius="xl" color="blue">N</Avatar>
+            <Box className="mws-hide-md">
+              <Text size="sm" fw={850} lh={1}>Nhat Minh</Text>
+              <Text size="xs" c="dimmed" lh={1.2}>Giáo viên</Text>
+            </Box>
+          </Group>
+        </Group>
+      </Group>
     </header>
   );
 }
+

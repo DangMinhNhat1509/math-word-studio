@@ -1,4 +1,19 @@
-import { Clock3, FilePlus2, Layers3, Trash2 } from "lucide-react";
+﻿import {
+  ActionIcon,
+  Badge,
+  Box,
+  Button,
+  Divider,
+  Group,
+  Paper,
+  ScrollArea,
+  Stack,
+  Text,
+  ThemeIcon,
+  Tooltip,
+} from "@mantine/core";
+import { ChevronLeft, FilePlus2, FileText, Plus, Trash2 } from "lucide-react";
+import AppNavigation from "./AppNavigation";
 
 function stripText(html = "") {
   const div = document.createElement("div");
@@ -7,6 +22,9 @@ function stripText(html = "") {
 }
 
 export default function LeftSidebar({
+  activePage,
+  activeTool,
+  onNavigate,
   pages,
   currentPageId,
   status,
@@ -16,71 +34,118 @@ export default function LeftSidebar({
   onDeletePage,
 }) {
   return (
-    <div className="mws-leftbar">
-      <div className="mws-panel-head">
-        <h2>Trang</h2>
-        <span className="mws-panel-count">{pages.length}</span>
-      </div>
+    <aside className="mws-leftbar">
+      <AppNavigation
+        activePage={activePage}
+        activeTool={activeTool}
+        onNavigate={onNavigate}
+      />
 
-      <div className="mws-page-list">
-        {pages.map((page, index) => {
-          const preview = stripText(page.html);
-          const selected = page.id === currentPageId;
+      <ScrollArea className="mws-page-panel">
+        <Group justify="space-between" align="flex-start" mb="md">
+          <Box>
+            <Text fw={900} size="lg">Trang</Text>
+            <Text size="xs" c="dimmed" fw={650}>
+              {pages.length} trang trong tài liệu
+            </Text>
+          </Box>
 
-          return (
-            <button
-              key={page.id}
-              type="button"
-              className={`mws-page-card-mini ${selected ? "is-active" : ""}`}
-              onClick={() => onSelectPage(page.id)}
-            >
-              <div className="mws-page-thumb">
-                <div className="mws-page-thumb-sheet">
-                  <div className="mws-page-thumb-line long" />
-                  <div className="mws-page-thumb-line medium" />
-                  <div className="mws-page-thumb-line short" />
-                </div>
-                <span className="mws-page-badge">{index + 1}</span>
-              </div>
+          <Tooltip label="Thêm trang">
+            <ActionIcon variant="light" color="blue" radius="md" onClick={onAddPage}>
+              <Plus size={18} />
+            </ActionIcon>
+          </Tooltip>
+        </Group>
 
-              <div className="mws-page-card-copy">
-                <strong>Trang {index + 1}</strong>
-                <span>{preview || "Trang trống"}</span>
-              </div>
-            </button>
-          );
-        })}
-      </div>
+        <Stack gap="md">
+          {pages.map((page, index) => {
+            const preview = stripText(page.html);
+            const selected = page.id === currentPageId;
 
-      <div className="mws-leftbar-actions">
-        <button type="button" className="mws-side-action" onClick={onAddPage}>
-          <FilePlus2 size={18} />
-          <span>Thêm trang mới</span>
-        </button>
+            return (
+              <button
+                type="button"
+                key={page.id}
+                className={`mws-page-card ${selected ? "active" : ""}`}
+                onClick={() => onSelectPage(page.id)}
+              >
+                <Paper className="mws-page-preview" withBorder radius="md">
+                  <div
+                    className="mws-page-preview-content"
+                    dangerouslySetInnerHTML={{ __html: page.html }}
+                  />
+                </Paper>
 
-        <button
-          type="button"
-          className="mws-side-action mws-side-action-danger"
-          onClick={onDeletePage}
-        >
-          <Trash2 size={18} />
-          <span>Xóa trang hiện tại</span>
-        </button>
-      </div>
+                <Group justify="space-between" mt={8} gap={6} wrap="nowrap">
+                  <Group gap={8} wrap="nowrap">
+                    <Badge
+                      color={selected ? "blue" : "gray"}
+                      variant={selected ? "filled" : "light"}
+                    >
+                      {index + 1}
+                    </Badge>
 
-      <div className="mws-side-info-card">
-        <div className="mws-side-info-title">
-          <Layers3 size={17} />
-          <strong>Trạng thái</strong>
-        </div>
-        <p>{status}</p>
-        {savedAt ? (
-          <div className="mws-side-meta">
-            <Clock3 size={14} />
-            <span>Lưu lần cuối: {savedAt}</span>
-          </div>
-        ) : null}
-      </div>
-    </div>
+                    <Box maw={130}>
+                      <Text size="sm" fw={850} truncate>
+                        Trang {index + 1}
+                      </Text>
+                      <Text size="xs" c="dimmed" truncate>
+                        {preview || "Trang trống"}
+                      </Text>
+                    </Box>
+                  </Group>
+                </Group>
+              </button>
+            );
+          })}
+        </Stack>
+
+        <Group grow mt="md">
+          <Button
+            size="xs"
+            radius="md"
+            variant="light"
+            leftSection={<FilePlus2 size={15} />}
+            onClick={onAddPage}
+          >
+            Thêm
+          </Button>
+
+          <Button
+            size="xs"
+            radius="md"
+            variant="light"
+            color="red"
+            leftSection={<Trash2 size={15} />}
+            onClick={onDeletePage}
+          >
+            Xóa
+          </Button>
+        </Group>
+
+        <Divider my="md" />
+
+        <Paper withBorder radius="lg" p="sm" className="mws-status-card">
+          <Group gap="sm" align="flex-start" wrap="nowrap">
+            <ThemeIcon variant="light" color="blue" radius="md">
+              <FileText size={17} />
+            </ThemeIcon>
+
+            <Box>
+              <Text size="sm" fw={850}>
+                {status || "Đang soạn thảo"}
+              </Text>
+              <Text size="xs" c="dimmed" mt={2}>
+                {savedAt ? `Lưu lần cuối: ${savedAt}` : "Chưa có mốc lưu"}
+              </Text>
+            </Box>
+          </Group>
+        </Paper>
+
+        <ActionIcon className="mws-collapse" variant="default" radius="xl" size="lg">
+          <ChevronLeft size={18} />
+        </ActionIcon>
+      </ScrollArea>
+    </aside>
   );
 }
