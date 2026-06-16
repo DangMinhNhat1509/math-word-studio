@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import {
   createBlankPage,
   getInitialPages,
@@ -7,6 +7,11 @@ import {
 } from "../utils/documentStorage";
 import { ensurePageFigures } from "../utils/figures";
 import { syncMathFields } from "../utils/mathLiveEditor";
+import {
+  clearCurrentCloudDocumentId,
+  getCurrentCloudDocumentId,
+  saveCloudDocument,
+} from "../services/documentService";
 
 export function useDocumentPages(editorRef, setSavedAt, setStatus) {
   const [doc, setDoc] = useState(() => {
@@ -15,6 +20,7 @@ export function useDocumentPages(editorRef, setSavedAt, setStatus) {
     return {
       pages,
       currentPageId: pages[0]?.id || "",
+      cloudDocumentId: getCurrentCloudDocumentId(),
     };
   });
 
@@ -41,10 +47,11 @@ export function useDocumentPages(editorRef, setSavedAt, setStatus) {
   }
 
   function setPages(nextPages, nextCurrentPageId = currentPageId) {
-    setDoc({
+    setDoc((oldDoc) => ({
+      ...oldDoc,
       pages: nextPages.map(ensurePageFigures),
       currentPageId: nextCurrentPageId,
-    });
+    }));
   }
 
   function updatePage(pageId, patchOrGetter) {
@@ -75,6 +82,7 @@ export function useDocumentPages(editorRef, setSavedAt, setStatus) {
     if (pageId === currentPageId) return;
 
     setDoc((oldDoc) => ({
+      ...oldDoc,
       pages: snapshotCurrentPage(oldDoc.pages.map(ensurePageFigures), oldDoc.currentPageId),
       currentPageId: pageId,
     }));
@@ -106,7 +114,7 @@ export function useDocumentPages(editorRef, setSavedAt, setStatus) {
     setStatus("Đã xóa trang");
   }
 
-  function saveDocument() {
+  async function saveDocument() {
     const savedPages = snapshotCurrentPage();
 
     setDoc((oldDoc) => ({
@@ -119,17 +127,44 @@ export function useDocumentPages(editorRef, setSavedAt, setStatus) {
       setSavedAt,
       setStatus,
     });
+
+    try {
+      setStatus("Đang lưu lên cloud...");
+
+      const result = await saveCloudDocument({
+        documentId: doc.cloudDocumentId,
+        title: "Đề kiểm tra Toán 8 - Chương 1",
+        pages: savedPages.map(ensurePageFigures),
+      });
+
+      setDoc((oldDoc) => ({
+        ...oldDoc,
+        cloudDocumentId: result.documentId,
+      }));
+
+      const now = new Date().toLocaleString("vi-VN");
+      setSavedAt(now);
+      setStatus(`Đã lưu cloud ${result.pageCount} trang`);
+    } catch (error) {
+      setStatus(`Đã lưu máy, chưa lưu cloud: ${error.message}`);
+    }
   }
 
   function resetDocument() {
     if (!confirm("Reset toàn bộ tài liệu về mẫu ban đầu?")) return;
 
     resetPagesInBrowser();
+    clearCurrentCloudDocumentId();
 
     const page1 = createBlankPage(1);
     const page2 = createBlankPage(2);
 
-    setPages([page1, page2], page1.id);
+    setDoc({
+      pages: [page1, page2],
+      currentPageId: page1.id,
+      cloudDocumentId: "",
+    });
+
     setSavedAt("");
     setStatus("Đã reset tài liệu");
   }
