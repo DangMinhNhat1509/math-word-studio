@@ -1,0 +1,99 @@
+﻿/* Editor polish - Word-like math document UI */
+
+.mws-formula {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  min-height: 1.35em;
+  margin: 0 2px;
+  padding: 0 1px;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+}
+
+.mws-formula.is-editing {
+  outline: 1px solid rgba(37, 99, 235, 0.35);
+  background: rgba(37, 99, 235, 0.05);
+}
+
+.mws-math,
+math-field.mws-math {
+  display: inline-block;
+  min-width: 0.8em;
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  color: inherit !important;
+  font-size: 1.02em;
+  line-height: 1.2;
+  padding: 0 1px;
+  vertical-align: middle;
+}
+
+math-field::part(menu-toggle),
+math-field::part(virtual-keyboard-toggle) {
+  display: none;
+}
+
+[contenteditable="true"] .mws-formula {
+  cursor: text;
+}
+
+.editor-page,
+.a4-page,
+.page,
+.document-page {
+  background: #ffffff;
+  color: #111827;
+  box-shadow: 0 12px 35px rgba(15, 23, 42, 0.12);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.editor-page [contenteditable="true"],
+.a4-page [contenteditable="true"],
+.page [contenteditable="true"],
+.document-page [contenteditable="true"] {
+  font-size: 16px;
+  line-height: 1.6;
+  color: #111827;
+  caret-color: #2563eb;
+}
+
+.editor-page p,
+.a4-page p,
+.page p,
+.document-page p {
+  margin: 0 0 8px;
+}
+
+.editor-page:focus-within,
+.a4-page:focus-within,
+.page:focus-within,
+.document-page:focus-within {
+  box-shadow: 0 16px 45px rgba(15, 23, 42, 0.16);
+}
+
+button {
+  font-family: inherit;
+}
+
+@media print {
+  .mws-formula {
+    outline: none !important;
+    background: transparent !important;
+  }
+
+  .mws-math,
+  math-field.mws-math {
+    background: transparent !important;
+  }
+
+  .editor-page,
+  .a4-page,
+  .page,
+  .document-page {
+    box-shadow: none !important;
+    border: 0 !important;
+  }
+}

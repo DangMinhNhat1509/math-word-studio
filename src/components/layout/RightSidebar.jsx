@@ -1,5 +1,18 @@
-﻿import { ActionIcon, Badge, Box, Button, Group, NumberInput, Paper, ScrollArea, Select, SimpleGrid, Stack, Switch, Tabs, Text, ThemeIcon } from "@mantine/core";
-import { Braces, CheckCircle2, Grid3X3, Info, Layout, Palette, Sigma, Sparkles, Triangle, Type, X } from "lucide-react";
+﻿import {
+  ActionIcon,
+  Button,
+  ColorInput,
+  Group,
+  NumberInput,
+  Paper,
+  ScrollArea,
+  Select,
+  SimpleGrid,
+  Stack,
+  Tabs,
+  Text,
+} from "@mantine/core";
+import { Braces, Info, Sigma, SlidersHorizontal, Triangle, X } from "lucide-react";
 
 export default function RightSidebar({
   symbols,
@@ -14,179 +27,215 @@ export default function RightSidebar({
   onInsertTemplate,
 }) {
   return (
-    <aside className="mws-rightbar">
-      <Tabs defaultValue="properties" radius="md" className="mws-inspector-tabs">
+    <aside className="mws-rightbar word-rightbar">
+      <Tabs defaultValue="props" className="mws-inspector-tabs word-inspector-tabs">
         <Tabs.List grow>
-          <Tabs.Tab value="properties">Thuộc tính</Tabs.Tab>
-          <Tabs.Tab value="content">Nội dung</Tabs.Tab>
-          <Tabs.Tab value="check">Kiểm tra</Tabs.Tab>
+          <Tabs.Tab value="props" leftSection={<SlidersHorizontal size={15} />}>
+            Thuộc tính
+          </Tabs.Tab>
+          <Tabs.Tab value="symbols" leftSection={<Sigma size={15} />}>
+            Ký hiệu
+          </Tabs.Tab>
         </Tabs.List>
 
-        <ScrollArea className="mws-inspector-scroll">
-          <Tabs.Panel value="properties" pt="md">
-            <Stack gap="sm">
-              <Paper withBorder radius="lg" p="md" className="mws-inspector-card">
+        <ScrollArea className="mws-inspector-scroll word-inspector-scroll" offsetScrollbars>
+          <Tabs.Panel value="props" pt="md">
+            <Stack gap="md">
+              <Paper className="mws-inspector-card word-inspector-card" withBorder>
                 <Group gap="sm" mb="sm">
-                  <ThemeIcon variant="light" color="blue" radius="md"><Type size={17} /></ThemeIcon>
-                  <Box>
-                    <Text fw={900} size="sm">Văn bản</Text>
-                    <Text size="xs" c="dimmed">Kiểu chữ, cỡ chữ, căn chỉnh</Text>
-                  </Box>
-                </Group>
-
-                <Select label="Phông chữ" value="Inter" data={["Inter", "Arial", "Times New Roman", "Roboto"]} readOnly radius="md" size="xs" />
-                <SimpleGrid cols={2} spacing="xs" mt="xs">
-                  <NumberInput label="Cỡ chữ" value={12} readOnly radius="md" size="xs" />
-                  <NumberInput label="Giãn dòng" value={1.5} readOnly radius="md" size="xs" />
-                </SimpleGrid>
-
-                <Group gap={6} mt="sm">
-                  <ActionIcon variant="default" radius="md"><strong>B</strong></ActionIcon>
-                  <ActionIcon variant="default" radius="md"><em>I</em></ActionIcon>
-                  <ActionIcon variant="default" radius="md"><u>U</u></ActionIcon>
-                  <ActionIcon variant="default" radius="md"><Palette size={15} /></ActionIcon>
-                </Group>
-              </Paper>
-
-              <Paper withBorder radius="lg" p="md" className="mws-inspector-card">
-                <Group gap="sm" mb="sm">
-                  <ThemeIcon variant="light" color="indigo" radius="md"><Sigma size={17} /></ThemeIcon>
-                  <Box>
-                    <Text fw={900} size="sm">Ký hiệu nhanh</Text>
-                    <Text size="xs" c="dimmed">Chèn tại vị trí con trỏ</Text>
-                  </Box>
-                </Group>
-
-                <SimpleGrid cols={4} spacing={7}>
-                  {symbols.map((symbol) => (
-                    <Button
-                      key={symbol}
-                      variant="default"
-                      radius="md"
-                      size="xs"
-                      className="mws-symbol-btn"
-                      onMouseDown={(event) => event.preventDefault()}
-                      onClick={() => onInsertSymbol(symbol)}
-                    >
-                      {symbol}
-                    </Button>
-                  ))}
-                </SimpleGrid>
-              </Paper>
-
-              <Paper withBorder radius="lg" p="md" className="mws-inspector-card">
-                <Group gap="sm" mb="sm">
-                  <ThemeIcon variant="light" color="violet" radius="md"><Braces size={17} /></ThemeIcon>
-                  <Box>
-                    <Text fw={900} size="sm">Mẫu công thức</Text>
-                    <Text size="xs" c="dimmed">Phân số, căn, hệ phương trình</Text>
-                  </Box>
-                </Group>
-
-                <Stack gap={7}>
-                  {formulas.slice(0, 8).map((formula) => (
-                    <Button
-                      key={formula}
-                      variant="light"
-                      color="gray"
-                      justify="flex-start"
-                      radius="md"
-                      size="xs"
-                      onMouseDown={(event) => event.preventDefault()}
-                      onClick={() => onInsertFormula(formula)}
-                    >
-                      {formula}
-                    </Button>
-                  ))}
-                </Stack>
-              </Paper>
-
-              <Paper withBorder radius="lg" p="md" className="mws-inspector-card">
-                <Group gap="sm" mb="sm">
-                  <ThemeIcon variant="light" color="cyan" radius="md"><Layout size={17} /></ThemeIcon>
-                  <Box>
-                    <Text fw={900} size="sm">Bố cục trang</Text>
-                    <Text size="xs" c="dimmed">A4, lề, lưới căn</Text>
-                  </Box>
-                </Group>
-
-                <Select label="Khổ giấy" value="A4" data={["A4", "A5", "Letter"]} readOnly radius="md" size="xs" />
-                <SimpleGrid cols={2} spacing="xs" mt="xs">
-                  <NumberInput label="Lề trên" value={20} readOnly radius="md" size="xs" />
-                  <NumberInput label="Lề trái" value={20} readOnly radius="md" size="xs" />
-                </SimpleGrid>
-                <Switch label="Hiện lưới căn" mt="sm" size="sm" />
-              </Paper>
-
-              <Paper withBorder radius="lg" p="md" className="mws-inspector-card">
-                <Group gap="sm" mb="sm">
-                  <ThemeIcon variant="light" color="orange" radius="md"><Triangle size={17} /></ThemeIcon>
-                  <Box>
-                    <Text fw={900} size="sm">Hình đang chọn</Text>
-                    <Text size="xs" c="dimmed">Chỉnh hình học trên trang</Text>
-                  </Box>
+                  <Info size={18} />
+                  <div>
+                    <Text fw={900}>Đối tượng</Text>
+                    <Text size="xs" c="dimmed" fw={700}>
+                      Chỉnh theo nội dung đang chọn
+                    </Text>
+                  </div>
                 </Group>
 
                 {activeFigure ? (
                   <Stack gap="xs">
-                    <Group justify="space-between">
-                      <Box>
-                        <Text fw={850} size="sm">{activeFigure.title || "Hình học"}</Text>
-                        <Text size="xs" c="dimmed">Loại: {activeFigure.type || "geometry"}</Text>
-                      </Box>
-                      <Badge variant="light">{activeFigure.id?.slice?.(0, 8) || "--"}</Badge>
+                    <Group justify="space-between" wrap="nowrap">
+                      <Group gap="xs">
+                        <Triangle size={18} />
+                        <Text fw={900}>{activeFigure.title || "Hình học"}</Text>
+                      </Group>
+
+                      <ActionIcon
+                        color="red"
+                        variant="light"
+                        radius="md"
+                        onClick={() => onDeleteFigure(activeFigure.id)}
+                      >
+                        <X size={16} />
+                      </ActionIcon>
                     </Group>
+
+                    <div className="word-object-row">
+                      <span>Loại</span>
+                      <strong>{activeFigure.type || "geometry"}</strong>
+                    </div>
+
+                    <div className="word-object-row">
+                      <span>ID</span>
+                      <strong>{activeFigure.id?.slice?.(0, 8) || "--"}</strong>
+                    </div>
+
                     <Group grow>
-                      <Button variant="default" size="xs" radius="md" leftSection={<X size={14} />} onClick={onDeselectFigure}>Bỏ chọn</Button>
-                      <Button variant="light" size="xs" radius="md" leftSection={<Sparkles size={14} />} onClick={onClearFigure}>Xóa nét</Button>
+                      <Button size="xs" variant="default" radius="md" onClick={onDeselectFigure}>
+                        Bỏ chọn
+                      </Button>
+                      <Button size="xs" color="red" variant="light" radius="md" onClick={onClearFigure}>
+                        Xóa nét
+                      </Button>
                     </Group>
-                    <Button color="red" variant="light" radius="md" size="xs" onClick={() => onDeleteFigure(activeFigure.id)}>Xóa hình</Button>
                   </Stack>
                 ) : (
-                  <Group gap="sm" wrap="nowrap" className="mws-empty-object">
-                    <Info size={17} />
-                    <Text size="xs" c="dimmed">Chọn chữ, công thức hoặc hình để chỉnh thuộc tính.</Text>
-                  </Group>
+                  <div className="mws-empty-object word-empty-object">
+                    <Text fw={900}>Chưa chọn đối tượng</Text>
+                    <Text size="sm" c="dimmed">
+                      Chọn chữ, công thức hoặc hình để hiện chỉnh sửa nhanh.
+                    </Text>
+                  </div>
                 )}
+              </Paper>
+
+              <Paper className="mws-inspector-card word-inspector-card" withBorder>
+                <Text fw={900} mb={10}>
+                  Văn bản
+                </Text>
+
+                <Stack gap="xs">
+                  <Select
+                    label="Phông chữ"
+                    data={["Inter", "Times New Roman", "Cambria", "Arial"]}
+                    defaultValue="Inter"
+                    size="xs"
+                    comboboxProps={{ withinPortal: true }}
+                  />
+
+                  <Group grow>
+                    <NumberInput label="Cỡ chữ" defaultValue={12} min={8} max={48} size="xs" suffix=" pt" />
+                    <ColorInput label="Màu chữ" defaultValue="#111827" size="xs" />
+                  </Group>
+
+                  <Group gap={6}>
+                    <button type="button" className="word-mini-toggle">B</button>
+                    <button type="button" className="word-mini-toggle italic">I</button>
+                    <button type="button" className="word-mini-toggle underline">U</button>
+                    <button type="button" className="word-mini-toggle">abc</button>
+                  </Group>
+                </Stack>
+              </Paper>
+
+              <Paper className="mws-inspector-card word-inspector-card" withBorder>
+                <Text fw={900} mb={10}>
+                  Trang
+                </Text>
+
+                <Stack gap="xs">
+                  <Select
+                    label="Kích thước"
+                    data={["A4 (210 × 297 mm)", "A5", "Letter"]}
+                    defaultValue="A4 (210 × 297 mm)"
+                    size="xs"
+                    comboboxProps={{ withinPortal: true }}
+                  />
+
+                  <Group grow>
+                    <Button size="xs" variant="light" radius="md">
+                      Dọc
+                    </Button>
+                    <Button size="xs" variant="default" radius="md">
+                      Ngang
+                    </Button>
+                  </Group>
+
+                  <SimpleGrid cols={2} spacing="xs">
+                    <NumberInput label="Trên" defaultValue={20} size="xs" suffix=" mm" />
+                    <NumberInput label="Dưới" defaultValue={20} size="xs" suffix=" mm" />
+                    <NumberInput label="Trái" defaultValue={20} size="xs" suffix=" mm" />
+                    <NumberInput label="Phải" defaultValue={20} size="xs" suffix=" mm" />
+                  </SimpleGrid>
+                </Stack>
               </Paper>
             </Stack>
           </Tabs.Panel>
 
-          <Tabs.Panel value="content" pt="md">
-            <Paper withBorder radius="lg" p="md">
-              <Group gap="sm" mb="sm">
-                <ThemeIcon variant="light" color="blue"><Grid3X3 size={17} /></ThemeIcon>
-                <Text fw={900} size="sm">Mẫu bài nhanh</Text>
-              </Group>
-              <Stack gap={7}>
-                {templates.map((template) => (
-                  <Button
-                    key={template.name}
-                    variant="default"
-                    justify="flex-start"
-                    radius="md"
-                    size="xs"
-                    leftSection={<Grid3X3 size={14} />}
-                    onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => onInsertTemplate(template)}
-                  >
-                    {template.name}
-                  </Button>
-                ))}
-              </Stack>
-            </Paper>
-          </Tabs.Panel>
+          <Tabs.Panel value="symbols" pt="md">
+            <Stack gap="md">
+              <Paper className="mws-inspector-card word-inspector-card" withBorder>
+                <Group gap="sm" mb="sm">
+                  <Sigma size={18} />
+                  <div>
+                    <Text fw={900}>Ký hiệu nhanh</Text>
+                    <Text size="xs" c="dimmed" fw={700}>
+                      Chèn tại vị trí con trỏ
+                    </Text>
+                  </div>
+                </Group>
 
-          <Tabs.Panel value="check" pt="md">
-            <Paper withBorder radius="lg" p="md">
-              <Group gap="sm" wrap="nowrap">
-                <ThemeIcon color="green" variant="light"><CheckCircle2 size={17} /></ThemeIcon>
-                <Box>
-                  <Text fw={900} size="sm">Tài liệu ổn</Text>
-                  <Text size="xs" c="dimmed">Giao diện đang theo mockup đã chốt.</Text>
-                </Box>
-              </Group>
-            </Paper>
+                <SimpleGrid cols={4} spacing={8}>
+                  {symbols.map((symbol) => (
+                    <button
+                      key={symbol}
+                      type="button"
+                      className="mws-symbol-btn word-symbol-btn"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => onInsertSymbol(symbol)}
+                    >
+                      {symbol}
+                    </button>
+                  ))}
+                </SimpleGrid>
+              </Paper>
+
+              <Paper className="mws-inspector-card word-inspector-card" withBorder>
+                <Group gap="sm" mb="sm">
+                  <Braces size={18} />
+                  <div>
+                    <Text fw={900}>Công thức mẫu</Text>
+                    <Text size="xs" c="dimmed" fw={700}>
+                      Dạng thường dùng
+                    </Text>
+                  </div>
+                </Group>
+
+                <Stack gap={7}>
+                  {formulas.map((formula) => (
+                    <button
+                      key={formula}
+                      type="button"
+                      className="word-formula-btn"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => onInsertFormula(formula)}
+                    >
+                      {formula}
+                    </button>
+                  ))}
+                </Stack>
+              </Paper>
+
+              <Paper className="mws-inspector-card word-inspector-card" withBorder>
+                <Text fw={900} mb="sm">
+                  Mẫu bài
+                </Text>
+
+                <Stack gap={7}>
+                  {templates.map((template) => (
+                    <Button
+                      key={template.name}
+                      size="xs"
+                      variant="light"
+                      radius="md"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => onInsertTemplate(template)}
+                    >
+                      {template.name}
+                    </Button>
+                  ))}
+                </Stack>
+              </Paper>
+            </Stack>
           </Tabs.Panel>
         </ScrollArea>
       </Tabs>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+﻿import { useEffect, useMemo, useRef } from "react";
 import GeometryCanvas from "../geometry/GeometryCanvas";
 import {
   autoConvertTypedMathAtCaret,
@@ -11,6 +11,10 @@ function stripText(html = "") {
   const div = document.createElement("div");
   div.innerHTML = html;
   return (div.textContent || "").replace(/\s+/g, " ").trim();
+}
+
+function safeHtml(html = "") {
+  return html && html.trim() ? html : "<p><br /></p>";
 }
 
 export default function DocumentPage({
@@ -36,7 +40,7 @@ export default function DocumentPage({
 
   useEffect(() => {
     if (!editorRef.current || !activePage) return;
-    editorRef.current.innerHTML = activePage.html || "<p></p>";
+    editorRef.current.innerHTML = safeHtml(activePage.html);
     prepareEditorMath(editorRef.current);
   }, [activePage?.id, editorRef]);
 
@@ -158,146 +162,141 @@ export default function DocumentPage({
   const counts = useMemo(() => {
     const text = stripText(activePage?.html || "");
     const words = text ? text.split(/\s+/).filter(Boolean).length : 0;
+
     return {
       words,
       chars: text.length,
     };
   }, [activePage?.html]);
 
+  const currentIndex = Math.max(0, pages.findIndex((page) => page.id === currentPageId));
+
   return (
-    <section className="mws-document-stage">
-      <div className="mws-page-stack">
+    <main className="workspace word-workspace">
+      <div className="word-workspace-inner">
         {pages.map((page, pageIndex) => {
           const isActive = page.id === currentPageId;
           const selectedFigureId = page.selectedFigureId;
 
           return (
-            <article
+            <section
               key={page.id}
-              className={`mws-page-frame ${isActive ? "is-active" : ""}`}
+              className={isActive ? "page-shell word-page-shell active" : "page-shell word-page-shell"}
               onMouseDown={() => onSelectPage(page.id)}
             >
-              <div className="mws-page-frame-head">
-                <div className="mws-page-frame-title">
-                  <strong>A4</strong>
-                  <span>Trang {pageIndex + 1}/{pageCount}</span>
-                </div>
-                <div className="mws-page-frame-status">
-                  {isActive ? "Đang sửa trang này" : "Bấm vào trang để sửa"}
-                </div>
+              <div className="word-page-meta">
+                <span>Trang {pageIndex + 1}</span>
+                <span>A4 · 210 × 297 mm</span>
               </div>
 
-              <div className="mws-paper-shell">
-                <div className="mws-paper">
-                  {isActive ? (
+              <article className={isActive ? "paper word-paper active-paper" : "paper word-paper"}>
+                {isActive ? (
+                  <div
+                    ref={editorRef}
+                    className="editor word-editor"
+                    contentEditable
+                    suppressContentEditableWarning
+                    data-active-tool={activeTool}
+                    onPaste={(event) => {
+                      handleCleanPaste(event, editorRef.current);
+                      setTimeout(syncHtml, 0);
+                    }}
+                    onMouseDown={() => onDeselectFigure(page.id)}
+                    onMouseUp={rememberSelection}
+                    onKeyUp={rememberSelection}
+                    onKeyDown={handleEditorKeyDown}
+                    onFocus={(event) => {
+                      if (event.target?.tagName !== "MATH-FIELD") {
+                        setActiveTool("text");
+                      }
+
+                      rememberSelection();
+                    }}
+                    onBlur={syncHtml}
+                    onInput={handleEditorInput}
+                  />
+                ) : (
+                  <div
+                    className="editor word-editor readonly-editor"
+                    dangerouslySetInnerHTML={{ __html: safeHtml(page.html) }}
+                  />
+                )}
+
+                {(page.figures || []).map((figure) => {
+                  const selected = isActive && figure.id === selectedFigureId;
+                  const box = figure.box || {
+                    x: 80,
+                    y: 520,
+                    width: 420,
+                    height: 260,
+                  };
+
+                  return (
                     <div
-                      ref={editorRef}
-                      className={`mws-editor-content ${activeTool === "text" ? "is-text-mode" : ""}`}
-                      contentEditable
-                      suppressContentEditableWarning
-                      onPaste={(event) => {
-                        handleCleanPaste(event, editorRef.current);
-                        setTimeout(syncHtml, 0);
+                      key={figure.id}
+                      className={selected ? "figure-box selected" : "figure-box"}
+                      style={{
+                        left: box.x,
+                        top: box.y,
+                        width: box.width,
+                        height: box.height,
                       }}
-                      onMouseDown={() => onDeselectFigure(page.id)}
-                      onMouseUp={rememberSelection}
-                      onKeyUp={rememberSelection}
-                      onKeyDown={handleEditorKeyDown}
-                      onFocus={(event) => {
-                        if (event.target?.tagName !== "MATH-FIELD") {
-                          setActiveTool("text");
-                        }
-                        rememberSelection();
+                      onPointerDown={(event) => {
+                        event.stopPropagation();
+                        onSelectPage(page.id);
+                        onSelectFigure(page.id, figure.id);
                       }}
-                      onBlur={syncHtml}
-                      onInput={handleEditorInput}
-                    />
-                  ) : (
-                    <div
-                      className="mws-editor-preview"
-                      dangerouslySetInnerHTML={{ __html: page.html || "<p></p>" }}
-                    />
-                  )}
-
-                  {(page.figures || []).map((figure) => {
-                    const selected = isActive && figure.id === selectedFigureId;
-                    const box = figure.box || {
-                      x: 80,
-                      y: 520,
-                      width: 420,
-                      height: 260,
-                    };
-
-                    return (
-                      <div
-                        key={figure.id}
-                        className={`mws-figure-box ${selected ? "is-selected" : ""}`}
-                        style={{
-                          left: box.x,
-                          top: box.y,
-                          width: box.width,
-                          height: box.height,
-                        }}
-                        onPointerDown={(event) => {
-                          event.stopPropagation();
-                          onSelectPage(page.id);
-                          onSelectFigure(page.id, figure.id);
-                        }}
-                      >
-                        <div
-                          className="mws-figure-box-head"
-                          onPointerDown={(event) => startMove(event, page.id, figure)}
-                        >
-                          <span>{figure.title || "Hình học"}</span>
-                          <button
-                            type="button"
-                            className="mws-figure-delete"
-                            onPointerDown={(event) => {
-                              event.stopPropagation();
-                              onDeleteFigure(page.id, figure.id);
-                            }}
-                          >
-                            Xóa
-                          </button>
-                        </div>
-
-                        <GeometryCanvas
-                          figure={figure}
-                          onDelete={() => onDeleteFigure(page.id, figure.id)}
-                          onChange={(nextFigure) =>
-                            onUpdateFigure(page.id, figure.id, nextFigure)
-                          }
-                        />
-
+                    >
+                      <div className="figure-toolbar" onPointerDown={(event) => startMove(event, page.id, figure)}>
+                        <span>{figure.title || "Hình học"}</span>
+                        <small>Kéo để di chuyển</small>
                         <button
                           type="button"
-                          className="mws-figure-resize"
-                          onPointerDown={(event) => startResize(event, page.id, figure)}
-                          aria-label="Resize figure"
+                          onPointerDown={(event) => event.stopPropagation()}
+                          onClick={() => onDeleteFigure(page.id, figure.id)}
+                        >
+                          Xóa
+                        </button>
+                      </div>
+
+                      <div className="figure-content">
+                        <GeometryCanvas
+                          figure={figure}
+                          selected={selected}
+                          onDelete={() => onDeleteFigure(page.id, figure.id)}
+                          onChange={(nextFigure) => onUpdateFigure(page.id, figure.id, nextFigure)}
                         />
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </article>
+
+                      <div
+                        className="figure-resize"
+                        onPointerDown={(event) => startResize(event, page.id, figure)}
+                        aria-label="Resize figure"
+                      />
+                    </div>
+                  );
+                })}
+              </article>
+            </section>
           );
         })}
       </div>
 
-      <div className="mws-stage-footer">
-        <div className="mws-stage-zoom">
-          <button type="button">−</button>
-          <span>100%</span>
-          <button type="button">+</button>
+      <footer className="word-statusbar">
+        <div>
+          Từ: <strong>{counts.words}</strong>
+          <span>·</span>
+          Ký tự: <strong>{counts.chars}</strong>
+          <span>·</span>
+          Trang: <strong>{currentIndex + 1}/{pageCount}</strong>
         </div>
 
-        <div className="mws-stage-stats">
-          <span>Từ: {counts.words}</span>
-          <span>Ký tự: {counts.chars}</span>
-          <span>Trang: {pages.findIndex((page) => page.id === currentPageId) + 1}/{pageCount}</span>
+        <div className="word-status-zoom">
+          <button type="button">−</button>
+          <strong>100%</strong>
+          <button type="button">+</button>
         </div>
-      </div>
-    </section>
+      </footer>
+    </main>
   );
 }

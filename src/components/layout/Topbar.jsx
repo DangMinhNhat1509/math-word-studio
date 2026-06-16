@@ -1,5 +1,15 @@
-﻿import { ActionIcon, Avatar, Box, Button, Group, Menu, Text, ThemeIcon, Tooltip } from "@mantine/core";
-import { Cloud, Code2, Copy, Download, FileText, MoreHorizontal, RefreshCcw, RotateCcw, Save, Sparkles } from "lucide-react";
+﻿import { ActionIcon, Avatar, Button, Group, Menu, Text, ThemeIcon, Tooltip } from "@mantine/core";
+import {
+  ChevronDown,
+  Cloud,
+  Copy,
+  Download,
+  FileText,
+  MoreHorizontal,
+  RefreshCcw,
+  RotateCcw,
+  Save,
+} from "lucide-react";
 
 const pageTitles = {
   dashboard: "Trang chủ",
@@ -18,72 +28,120 @@ export default function Topbar({
   onCopyHtml,
   onReset,
 }) {
+  const title = pageTitles[activePage] || "Soạn đề Toán A4";
+  const savedText = activePage === "editor" && savedAt ? `Đã lưu ${savedAt}` : status || "Đã sẵn sàng";
+
   return (
-    <header className="mws-topbar">
-      <Group justify="space-between" h="100%" wrap="nowrap">
-        <Group gap="sm" wrap="nowrap" className="mws-brand">
-          <ThemeIcon size={42} radius="md" variant="gradient" gradient={{ from: "blue", to: "indigo" }}>
-            <Text fw={950} size="lg">M</Text>
-          </ThemeIcon>
-          <Box>
-            <Text fw={900} size="lg" lh={1} c="blue.8">Math Word Studio</Text>
-            <Text size="xs" c="dimmed" fw={650} mt={4}>{pageTitles[activePage] || "Soạn đề Toán A4"}</Text>
-          </Box>
+    <header className="mws-topbar word-topbar">
+      <Group h="100%" justify="space-between" wrap="nowrap" gap="md">
+        <Group gap="md" wrap="nowrap" className="word-topbar-left">
+          <Group gap="sm" wrap="nowrap" className="word-brand">
+            <ThemeIcon size={38} radius="md" className="word-brand-logo">
+              M
+            </ThemeIcon>
+
+            <div>
+              <Text fw={900} size="md" lh={1.05}>
+                Math Word Studio
+              </Text>
+              <Text size="xs" c="dimmed" fw={700}>
+                Soạn đề · công thức · hình học
+              </Text>
+            </div>
+          </Group>
+
+          <div className="word-title-divider" />
+
+          <button className="word-doc-title" type="button">
+            <FileText size={16} />
+            <span>{title}</span>
+            <ChevronDown size={14} />
+          </button>
         </Group>
 
-        <Group gap={8} wrap="nowrap" className="mws-topbar-center">
+        <Group gap="xs" wrap="nowrap" className="word-topbar-center">
           <Tooltip label="Hoàn tác">
-            <ActionIcon variant="default" size="lg" radius="md"><RotateCcw size={17} /></ActionIcon>
+            <ActionIcon variant="subtle" color="gray" radius="md" size="lg">
+              <RotateCcw size={18} />
+            </ActionIcon>
           </Tooltip>
+
           <Tooltip label="Làm lại">
-            <ActionIcon variant="default" size="lg" radius="md"><RefreshCcw size={17} /></ActionIcon>
+            <ActionIcon variant="subtle" color="gray" radius="md" size="lg">
+              <RefreshCcw size={18} />
+            </ActionIcon>
           </Tooltip>
-          <Group gap={4} className="mws-zoom-control">
-            <ActionIcon variant="subtle" size="sm">−</ActionIcon>
-            <Text fw={850} size="sm">100%</Text>
-            <ActionIcon variant="subtle" size="sm">+</ActionIcon>
-          </Group>
+
+          <div className="word-zoom-pill">
+            <button type="button">−</button>
+            <strong>100%</strong>
+            <button type="button">+</button>
+          </div>
         </Group>
 
-        <Group gap="xs" wrap="nowrap" className="mws-topbar-actions">
-          <Group gap={6} className="mws-save-pill">
+        <Group gap="xs" wrap="nowrap" className="word-topbar-actions">
+          <div className="word-save-pill">
             <Cloud size={15} />
-            <Text size="xs" fw={800}>{activePage === "editor" && savedAt ? `Đã lưu ${savedAt}` : "Đã sẵn sàng"}</Text>
-          </Group>
+            <span>{savedText}</span>
+          </div>
 
           <Button variant="default" radius="md" leftSection={<Save size={16} />} onClick={onSave}>
             Lưu
           </Button>
 
-          <Button className="mws-hide-md" variant="light" radius="md" leftSection={<Copy size={16} />} onClick={onCopyText}>
+          <Button
+            variant="light"
+            color="blue"
+            radius="md"
+            leftSection={<Copy size={16} />}
+            onClick={onCopyText}
+            className="word-copy-btn"
+          >
             Copy chữ
           </Button>
 
-          <Button radius="md" leftSection={<Download size={16} />} onClick={onPrint} className="mws-export-btn">
+          <Button
+            radius="md"
+            leftSection={<Download size={16} />}
+            onClick={onPrint}
+            className="mws-export-btn word-export-btn"
+          >
             Xuất PDF
           </Button>
 
-          <Menu shadow="md" width={210} position="bottom-end">
+          <Menu shadow="md" width={220} position="bottom-end">
             <Menu.Target>
-              <ActionIcon variant="default" size="lg" radius="md"><MoreHorizontal size={18} /></ActionIcon>
+              <ActionIcon variant="default" radius="md" size="lg">
+                <MoreHorizontal size={18} />
+              </ActionIcon>
             </Menu.Target>
+
             <Menu.Dropdown>
               <Menu.Label>Tài liệu</Menu.Label>
-              <Menu.Item leftSection={<Code2 size={15} />} onClick={onCopyHtml}>Copy HTML</Menu.Item>
-              <Menu.Item leftSection={<Sparkles size={15} />} onClick={onReset} color="red">Tạo lại tài liệu</Menu.Item>
+              <Menu.Item leftSection={<Copy size={15} />} onClick={onCopyHtml}>
+                Copy HTML
+              </Menu.Item>
+              <Menu.Item color="red" leftSection={<RefreshCcw size={15} />} onClick={onReset}>
+                Tạo lại tài liệu
+              </Menu.Item>
             </Menu.Dropdown>
           </Menu>
 
-          <Group gap={8} wrap="nowrap" className="mws-user">
-            <Avatar size={34} radius="xl" color="blue">N</Avatar>
-            <Box className="mws-hide-md">
-              <Text size="sm" fw={850} lh={1}>Nhat Minh</Text>
-              <Text size="xs" c="dimmed" lh={1.2}>Giáo viên</Text>
-            </Box>
+          <Group gap={8} wrap="nowrap" className="word-user">
+            <Avatar radius="xl" color="blue" size={36}>
+              N
+            </Avatar>
+            <div>
+              <Text size="sm" fw={900} lh={1.05}>
+                Nhat Minh
+              </Text>
+              <Text size="xs" c="dimmed" fw={700}>
+                Giáo viên
+              </Text>
+            </div>
           </Group>
         </Group>
       </Group>
     </header>
   );
 }
-

@@ -1,48 +1,48 @@
-import "mathlive";
+﻿import "mathlive";
 
 const QUICK_SYMBOL_LATEX = {
-  "âˆ": "\\sqrt{}",
-  "Â²": "^{2}",
-  "Â³": "^{3}",
-  "Ï€": "\\pi",
-  "âˆ": "\\infty",
-  "â‰ˆ": "\\approx",
-  "â‰ ": "\\ne",
-  "â‰¤": "\\le",
-  "â‰¥": "\\ge",
-  "Â±": "\\pm",
-  "Ă—": "\\times",
-  "Ă·": "\\div",
-  "âˆ ABC": "\\angle ABC",
-  "â–³ABC": "\\triangle ABC",
-  "â¥": "\\perp",
-  "âˆ¥": "\\parallel",
-  "âˆˆ": "\\in",
-  "âˆ‰": "\\notin",
-  "â‡’": "\\Rightarrow",
-  "â‡”": "\\Leftrightarrow",
-  "âˆ‘": "\\sum",
-  "Î£": "\\sum",
-  "Î±": "\\alpha",
-  "Î²": "\\beta",
-  "Î”": "\\Delta",
+  "√": "\\sqrt{}",
+  "²": "^{2}",
+  "³": "^{3}",
+  "π": "\\pi",
+  "∞": "\\infty",
+  "≈": "\\approx",
+  "≠": "\\ne",
+  "≤": "\\le",
+  "≥": "\\ge",
+  "±": "\\pm",
+  "×": "\\times",
+  "÷": "\\div",
+  "∠ABC": "\\angle ABC",
+  "△ABC": "\\triangle ABC",
+  "⊥": "\\perp",
+  "∥": "\\parallel",
+  "∈": "\\in",
+  "∉": "\\notin",
+  "⇒": "\\Rightarrow",
+  "⇔": "\\Leftrightarrow",
+  "∑": "\\sum",
+  "Σ": "\\sum",
+  "α": "\\alpha",
+  "β": "\\beta",
+  "Δ": "\\Delta",
 };
 
 const SUPER = {
-  "â°": "0",
-  "Â¹": "1",
-  "Â²": "2",
-  "Â³": "3",
-  "â´": "4",
-  "âµ": "5",
-  "â¶": "6",
-  "â·": "7",
-  "â¸": "8",
-  "â¹": "9",
+  "⁰": "0",
+  "¹": "1",
+  "²": "2",
+  "³": "3",
+  "⁴": "4",
+  "⁵": "5",
+  "⁶": "6",
+  "⁷": "7",
+  "⁸": "8",
+  "⁹": "9",
 };
 
 function normalizeSuperscripts(text) {
-  return String(text).replace(/[â°Â¹Â²Â³â´âµâ¶â·â¸â¹]+/g, (match) => {
+  return String(text).replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]+/g, (match) => {
     const number = [...match].map((char) => SUPER[char] || "").join("");
     return `^{${number}}`;
   });
@@ -50,28 +50,27 @@ function normalizeSuperscripts(text) {
 
 export function textToLatex(input = "") {
   let text = String(input || "").trim();
-
   if (!text) return "";
   if (QUICK_SYMBOL_LATEX[text]) return QUICK_SYMBOL_LATEX[text];
 
   text = normalizeSuperscripts(text);
 
   text = text
-    .replaceAll("Ï€", "\\pi")
-    .replaceAll("âˆ", "\\infty")
-    .replaceAll("â‰ˆ", "\\approx")
-    .replaceAll("â‰ ", "\\ne")
-    .replaceAll("â‰¤", "\\le")
-    .replaceAll("â‰¥", "\\ge")
-    .replaceAll("Â±", "\\pm")
-    .replaceAll("Ă—", "\\times")
-    .replaceAll("Ă·", "\\div")
-    .replaceAll("Â·", "\\cdot")
-    .replaceAll("â‡’", "\\Rightarrow")
-    .replaceAll("â‡”", "\\Leftrightarrow")
-    .replaceAll("Î”", "\\Delta")
-    .replaceAll("Î±", "\\alpha")
-    .replaceAll("Î²", "\\beta");
+    .replaceAll("π", "\\pi")
+    .replaceAll("∞", "\\infty")
+    .replaceAll("≈", "\\approx")
+    .replaceAll("≠", "\\ne")
+    .replaceAll("≤", "\\le")
+    .replaceAll("≥", "\\ge")
+    .replaceAll("±", "\\pm")
+    .replaceAll("×", "\\times")
+    .replaceAll("÷", "\\div")
+    .replaceAll("·", "\\cdot")
+    .replaceAll("⇒", "\\Rightarrow")
+    .replaceAll("⇔", "\\Leftrightarrow")
+    .replaceAll("Δ", "\\Delta")
+    .replaceAll("α", "\\alpha")
+    .replaceAll("β", "\\beta");
 
   text = text
     .replace(/>=/g, "\\ge")
@@ -80,15 +79,15 @@ export function textToLatex(input = "") {
     .replace(/=>/g, "\\Rightarrow");
 
   text = text
-    .replace(/cÄƒn\s*\(([^()]+)\)/gi, "\\sqrt{$1}")
+    .replace(/căn\s*\(([^()]+)\)/gi, "\\sqrt{$1}")
     .replace(/sqrt\s*\(([^()]+)\)/gi, "\\sqrt{$1}")
-    .replace(/âˆ\s*\(([^()]+)\)/g, "\\sqrt{$1}")
-    .replace(/âˆ\s*([A-Za-z0-9\\{}^+\-*/.]+)/g, "\\sqrt{$1}");
+    .replace(/√\s*\(([^()]+)\)/g, "\\sqrt{$1}")
+    .replace(/√\s*([A-Za-z0-9\\{}^+\-*/.]+)/g, "\\sqrt{$1}");
 
   text = text
     .replace(/\bint\s*_\s*([^\s^]+)\s*\^\s*([^\s]+)\s*/gi, "\\int_{$1}^{$2} ")
-    .replace(/âˆ«\s*_\s*([^\s^]+)\s*\^\s*([^\s]+)\s*/g, "\\int_{$1}^{$2} ")
-    .replace(/âˆ«/g, "\\int")
+    .replace(/∫\s*_\s*([^\s^]+)\s*\^\s*([^\s]+)\s*/g, "\\int_{$1}^{$2} ")
+    .replace(/∫/g, "\\int")
     .replace(/\bsum\s*_\s*([^\s^]+)\s*\^\s*([^\s]+)\s*/gi, "\\sum_{$1}^{$2} ");
 
   text = text
@@ -106,14 +105,17 @@ export function textToLatex(input = "") {
     text = text.replace(/\(([^()]+)\)\s*\/\s*\(([^()]+)\)/g, "\\frac{$1}{$2}");
     text = text.replace(/\(([^()]+)\)\s*\/\s*([A-Za-z0-9]+(?:\^\{\d+\})?)/g, "\\frac{$1}{$2}");
     text = text.replace(/([A-Za-z0-9]+(?:\^\{\d+\})?)\s*\/\s*\(([^()]+)\)/g, "\\frac{$1}{$2}");
-    text = text.replace(/(^|[\s=+\-*])(\d+(?:[.,]\d+)?|[A-Za-z]+[A-Za-z0-9]*)\s*\/\s*(\d+(?:[.,]\d+)?|[A-Za-z]+[A-Za-z0-9]*)/g, "$1\\frac{$2}{$3}");
+    text = text.replace(
+      /(^|[\s=+\-*])(\d+(?:[.,]\d+)?|[A-Za-z]+[A-Za-z0-9]*)\s*\/\s*(\d+(?:[.,]\d+)?|[A-Za-z]+[A-Za-z0-9]*)/g,
+      "$1\\frac{$2}{$3}"
+    );
   }
 
   text = text.replace(
-    /(\d+(?:[.,]\d+)?)\s*(cm|mm|dm|m|km)(\^\{?\d+\}?|Â²|Â³)?\b/g,
+    /(\d+(?:[.,]\d+)?)\s*(cm|mm|dm|m|km)(\^\{?\d+\}?|²|³)?\b/g,
     (_, n, unit, power = "") => {
-      if (power === "Â²") power = "^{2}";
-      if (power === "Â³") power = "^{3}";
+      if (power === "²") power = "^{2}";
+      if (power === "³") power = "^{3}";
       return `${n}\\,\\mathrm{${unit}}${power}`;
     }
   );
@@ -124,10 +126,8 @@ export function textToLatex(input = "") {
 function placeCaretAfter(node) {
   const range = document.createRange();
   const selection = window.getSelection();
-
   range.setStartAfter(node);
   range.collapse(true);
-
   selection.removeAllRanges();
   selection.addRange(range);
 }
@@ -135,10 +135,8 @@ function placeCaretAfter(node) {
 function placeCaretInside(node) {
   const range = document.createRange();
   const selection = window.getSelection();
-
   range.selectNodeContents(node);
   range.collapse(false);
-
   selection.removeAllRanges();
   selection.addRange(range);
 }
@@ -147,7 +145,6 @@ function insertParagraphAfterMathField(field) {
   const wrapper = field.closest(".mws-formula") || field;
   const block = wrapper.closest("p, div, li") || wrapper;
   const p = document.createElement("p");
-
   p.innerHTML = "<br>";
   block.after(p);
   placeCaretInside(p);
@@ -155,7 +152,6 @@ function insertParagraphAfterMathField(field) {
 
 function prepareOneMathField(field) {
   if (!field || field.dataset.ready === "1") return;
-
   field.dataset.ready = "1";
 
   try {
@@ -180,7 +176,6 @@ function prepareOneMathField(field) {
 
   field.addEventListener("input", () => {
     const value = field.value || "";
-
     field.dataset.latex = value;
     field.setAttribute("data-latex", value);
     field.setAttribute("value", value);
@@ -211,13 +206,12 @@ function prepareOneMathField(field) {
 
 function makeMathField(rawValue = "", focus = false) {
   const latex = textToLatex(rawValue);
-  const wrapper = document.createElement("span");
 
+  const wrapper = document.createElement("span");
   wrapper.className = "mws-formula";
   wrapper.setAttribute("contenteditable", "false");
 
   const field = document.createElement("math-field");
-
   field.className = "mws-math";
   field.setAttribute("smart-mode", "on");
   field.setAttribute("smart-fence", "on");
@@ -253,7 +247,6 @@ function makeMathField(rawValue = "", focus = false) {
 
 function getActiveMathField() {
   const active = document.activeElement;
-
   if (active?.tagName === "MATH-FIELD") return active;
   return null;
 }
@@ -270,7 +263,6 @@ function insertIntoMathField(field, value) {
   }
 
   const nextValue = field.value || field.getAttribute("value") || latex;
-
   field.dataset.latex = nextValue;
   field.setAttribute("data-latex", nextValue);
   field.setAttribute("value", nextValue);
@@ -290,7 +282,6 @@ export function prepareEditorMath(editor) {
 
     const formula = makeMathField(source, false);
     const space = document.createTextNode("\u00A0");
-
     block.replaceWith(formula, space);
   });
 
@@ -326,12 +317,11 @@ export function insertInlineMathField({
 
   if (activeField) {
     insertIntoMathField(activeField, value);
-    setStatus?.("ÄĂ£ chĂ¨n vĂ o cĂ´ng thá»©c Ä‘ang sá»­a");
+    setStatus?.("Đã chèn vào công thức đang sửa");
     return;
   }
 
   const editor = editorRef.current;
-
   if (!editor) return;
 
   editor.focus();
@@ -358,7 +348,6 @@ export function insertInlineMathField({
 
   if (!shouldFocus) {
     placeCaretAfter(space);
-
     requestAnimationFrame(() => {
       editor.focus();
       placeCaretAfter(space);
@@ -367,7 +356,7 @@ export function insertInlineMathField({
 
   prepareEditorMath(editor);
   rememberSelection?.();
-  setStatus?.("ÄĂ£ chĂ¨n cĂ´ng thá»©c táº¡i Ä‘Ăºng vá»‹ trĂ­ con trá»");
+  setStatus?.("Đã chèn công thức tại đúng vị trí con trỏ");
 }
 
 function findCurrentBlock(editor, node) {
@@ -392,11 +381,9 @@ export function convertCurrentBlockToInlineMath(editor) {
   if (!editor || !selection || selection.rangeCount === 0) return false;
 
   const block = findCurrentBlock(editor, selection.anchorNode);
-
   if (!block) return false;
 
   const source = (block.innerText || block.textContent || "").trim();
-
   if (!source) return false;
 
   const formula = makeMathField(source, false);
@@ -419,11 +406,12 @@ function isMathCandidate(text) {
   if (value.length > 160) return false;
 
   const hasMathSignal =
-    /\/|sqrt\s*\(|cÄƒn\s*\(|âˆ|=|>=|<=|!=|=>|[â‰¥â‰¤â‰ â‰ˆÂ±Ă—Ă·^â°Â¹Â²Â³â´âµâ¶â·â¸â¹]|\\/.test(value);
+    /\/|sqrt\s*\(|căn\s*\(|√|=|>=|<=|!=|=>|[≥≤≠≈±×÷^⁰¹²³⁴⁵⁶⁷⁸⁹]|\\/.test(value);
 
   if (!hasMathSignal) return false;
 
-  const allowed = /^[A-Za-z0-9\sÏ€âˆâ‰ˆâ‰ â‰¤â‰¥Â±Ă—Ă·âˆ â–³â¥âˆ¥âˆˆâˆ‰â‡’â‡”âˆ‘Î£Î±Î²Î”âˆ.,;:(){}\[\]+\-*/^_=<>!]+$/u;
+  const allowed =
+    /^[A-Za-z0-9\sπ∞≈≠≤≥±×÷∠△⊥∥∈∉⇒⇔∑ΣαβΔ√.,;:(){}\[\]+\-*/^_=<>!]+$/u;
 
   return allowed.test(value);
 }
@@ -445,7 +433,7 @@ function findMathSuffix(before) {
       starts.push(i + 1);
     }
 
-    if ("ï¼Œ,;:ă€‚".includes(char)) {
+    if ("，,;:。".includes(char)) {
       starts.push(i + 1);
       break;
     }
@@ -469,7 +457,7 @@ function findMathSuffix(before) {
   }
 
   const simple = body.match(
-    /(?:^|[\s(])((?:[A-Za-z0-9]+|\([^()]+\))\s*\/\s*(?:[A-Za-z0-9]+|\([^()]+\))|sqrt\([^)]{1,80}\)|cÄƒn\([^)]{1,80}\)|âˆ\([^)]{1,80}\)|âˆ\s*[A-Za-z0-9]+|[A-Za-z0-9]+\^\d+)$/i
+    /(?:^|[\s(])((?:[A-Za-z0-9]+|\([^()]+\))\s*\/\s*(?:[A-Za-z0-9]+|\([^()]+\))|sqrt\([^)]{1,80}\)|căn\([^)]{1,80}\)|√\([^)]{1,80}\)|√\s*[A-Za-z0-9]+|[A-Za-z0-9]+\^\d+)$/i
   );
 
   if (!simple) return null;
@@ -508,7 +496,6 @@ export function autoConvertTypedMathAtCaret(editor) {
   if (!match) return false;
 
   const range = document.createRange();
-
   range.setStart(node, match.start);
   range.setEnd(node, offset);
   range.deleteContents();
@@ -546,10 +533,6 @@ export function getPlainTextWithMath(editor) {
   return clone.innerText || clone.textContent || "";
 }
 
-/* MWSTUDIO_SLASH_FRACTION_CURSOR_FIX
-   Khi gơ 1/ trong math-field: app t?o phân s? và t? dua con tr? xu?ng m?u.
-   Không d?ng giao di?n, không d?ng logic h́nh h?c.
-*/
 function installSlashFractionCursorFix() {
   if (typeof window === "undefined") return;
   if (window.__MWSTUDIO_SLASH_FRACTION_CURSOR_FIX__) return;
@@ -558,8 +541,15 @@ function installSlashFractionCursorFix() {
 
   const getMathField = (target) => {
     if (!target) return null;
-    if (target.tagName && target.tagName.toLowerCase() === "math-field") return target;
-    if (typeof target.closest === "function") return target.closest("math-field");
+
+    if (target.tagName && target.tagName.toLowerCase() === "math-field") {
+      return target;
+    }
+
+    if (typeof target.closest === "function") {
+      return target.closest("math-field");
+    }
+
     return null;
   };
 
@@ -569,20 +559,19 @@ function installSlashFractionCursorFix() {
     const move = () => {
       try {
         field.focus && field.focus();
-      } catch (error) {}
+      } catch {}
 
       try {
         field.executeCommand("moveToNextPlaceholder");
         return;
-      } catch (error) {}
+      } catch {}
 
       try {
         field.executeCommand(["moveToNextPlaceholder"]);
         return;
-      } catch (error) {}
+      } catch {}
     };
 
-    // Ch? app/MathLive t?o phân s? xong r?i m?i nh?y xu?ng m?u
     setTimeout(move, 0);
     setTimeout(move, 30);
     requestAnimationFrame(move);
