@@ -6,6 +6,7 @@ import {
   prepareEditorMath,
 } from "../../utils/mathLiveEditor";
 import { handleCleanPaste } from "../../utils/pasteCleaner";
+import { sanitizeHtml } from "../../utils/sanitizer";
 
 function stripText(html = "") {
   const div = document.createElement("div");
@@ -215,7 +216,7 @@ export default function DocumentPage({
                   ) : (
                     <div
                       className="mws-editor-preview"
-                      dangerouslySetInnerHTML={{ __html: page.html || "<p></p>" }}
+                      dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.html || "<p></p>") }}
                     />
                   )}
 
