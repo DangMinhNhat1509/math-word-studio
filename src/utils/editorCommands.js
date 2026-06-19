@@ -2,11 +2,11 @@ import { getPlainTextWithMath, syncMathFields } from "./mathLiveEditor";
 import { sanitizeEditorInput } from "./sanitizer";
 
 export function runCommand(command, value = null) {
-  if (!command || typeof command !== 'string') {
+  if (!command || typeof command !== "string") {
     console.error("Invalid command:", command);
     return;
   }
-  
+
   try {
     document.execCommand(command, false, value);
   } catch (error) {
@@ -29,7 +29,7 @@ export function insertHtmlToEditor({
   }
 
   // Validate and sanitize input
-  if (!html || typeof html !== 'string') {
+  if (!html || typeof html !== "string") {
     console.error("Invalid HTML input:", html);
     return;
   }
@@ -40,7 +40,11 @@ export function insertHtmlToEditor({
   restoreSelection();
 
   const selection = window.getSelection();
-  if (!selection || selection.rangeCount === 0 || !editor.contains(selection.anchorNode)) {
+  if (
+    !selection ||
+    selection.rangeCount === 0 ||
+    !editor.contains(selection.anchorNode)
+  ) {
     const range = document.createRange();
     range.selectNodeContents(editor);
     range.collapse(false);
@@ -53,7 +57,12 @@ export function insertHtmlToEditor({
   setStatus(message);
 }
 
-export async function copyPlainText({ editorRef, showDiagram, diagram, setStatus }) {
+export async function copyPlainText({
+  editorRef,
+  showDiagram,
+  diagram,
+  setStatus,
+}) {
   const text = getPlainTextWithMath(editorRef.current);
   const diagramText = showDiagram
     ? `\n\nHình: Tam giác ${diagram.a}${diagram.b}${diagram.c}; ${diagram.ab}; ${diagram.ac}; ${diagram.bc}`

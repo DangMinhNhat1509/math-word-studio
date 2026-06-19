@@ -7,12 +7,16 @@ function escapeHtml(value = "") {
 
 function formatChoiceLine(line = "") {
   const normalized = line.replace(/\s+/g, " ").trim();
-  const match = normalized.match(/^(.*?)(A[\.\)]\s*.*?)(B[\.\)]\s*.*?)(C[\.\)]\s*.*?)(D[\.\)]\s*.*)$/i);
+  const match = normalized.match(
+    /^(.*?)(A[\.\)]\s*.*?)(B[\.\)]\s*.*?)(C[\.\)]\s*.*?)(D[\.\)]\s*.*)$/i,
+  );
 
   if (!match) return null;
 
   const question = match[1].trim();
-  const choices = [match[2], match[3], match[4], match[5]].map((choice) => choice.trim());
+  const choices = [match[2], match[3], match[4], match[5]].map((choice) =>
+    choice.trim(),
+  );
   const longChoice = choices.some((choice) => choice.length > 40);
   const className = longChoice ? "choice-list" : "choice-grid";
 
@@ -46,7 +50,11 @@ export function cleanPastedHtml(html = "") {
     const tag = el.tagName;
 
     if (tag === "MATH-FIELD") {
-      const latex = el.getAttribute("data-latex") || el.getAttribute("value") || el.textContent || "";
+      const latex =
+        el.getAttribute("data-latex") ||
+        el.getAttribute("value") ||
+        el.textContent ||
+        "";
       el.setAttribute("class", "mws-math");
       el.setAttribute("data-latex", latex);
       el.setAttribute("value", latex);
@@ -60,7 +68,11 @@ export function cleanPastedHtml(html = "") {
       return;
     }
 
-    if (tag === "DIV" && (el.classList.contains("choice-grid") || el.classList.contains("choice-list"))) {
+    if (
+      tag === "DIV" &&
+      (el.classList.contains("choice-grid") ||
+        el.classList.contains("choice-list"))
+    ) {
       return;
     }
 
@@ -70,7 +82,25 @@ export function cleanPastedHtml(html = "") {
     el.removeAttribute("width");
     el.removeAttribute("height");
 
-    const allowed = ["P", "B", "STRONG", "I", "EM", "U", "BR", "H1", "H2", "H3", "UL", "OL", "LI", "SPAN", "SUB", "SUP", "DIV"];
+    const allowed = [
+      "P",
+      "B",
+      "STRONG",
+      "I",
+      "EM",
+      "U",
+      "BR",
+      "H1",
+      "H2",
+      "H3",
+      "UL",
+      "OL",
+      "LI",
+      "SPAN",
+      "SUB",
+      "SUP",
+      "DIV",
+    ];
 
     if (!allowed.includes(tag)) {
       const span = doc.createElement("span");

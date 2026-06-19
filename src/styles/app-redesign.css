@@ -24,8 +24,12 @@ body {
   margin: 0;
   color: var(--mws-text);
   background:
-    radial-gradient(circle at 14% -8%, rgba(37, 99, 235, 0.12), transparent 30%),
-    radial-gradient(circle at 90% 4%, rgba(14, 165, 233, 0.10), transparent 25%),
+    radial-gradient(
+      circle at 14% -8%,
+      rgba(37, 99, 235, 0.12),
+      transparent 30%
+    ),
+    radial-gradient(circle at 90% 4%, rgba(14, 165, 233, 0.1), transparent 25%),
     linear-gradient(180deg, #f8fbff 0%, #f1f5f9 100%);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -169,7 +173,11 @@ button {
   border-radius: 28px;
   overflow: hidden;
   background:
-    radial-gradient(circle at 85% 20%, rgba(37, 99, 235, 0.12), transparent 28%),
+    radial-gradient(
+      circle at 85% 20%,
+      rgba(37, 99, 235, 0.12),
+      transparent 28%
+    ),
     linear-gradient(135deg, #ffffff 0%, #eff6ff 100%) !important;
   border: 1px solid rgba(191, 219, 254, 0.95);
   box-shadow: var(--mws-soft-shadow);
@@ -220,7 +228,10 @@ button {
 .mws-saved-doc-card {
   border-radius: 18px !important;
   cursor: pointer;
-  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    border-color 0.16s ease;
   background: rgba(255, 255, 255, 0.96) !important;
 }
 
@@ -388,7 +399,9 @@ button {
 
 .mws-page-card.active .mws-page-preview {
   border-color: var(--mws-blue);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.13), var(--mws-soft-shadow);
+  box-shadow:
+    0 0 0 3px rgba(37, 99, 235, 0.13),
+    var(--mws-soft-shadow);
 }
 
 .mws-page-preview-content {
@@ -900,4 +913,236 @@ button {
 .mws-preview-modal-paper h2 {
   color: #0f3fbd;
   text-align: center;
+}
+
+/* EDITOR PAGE ENHANCEMENTS */
+body {
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    Segoe UI,
+    sans-serif;
+}
+
+.mws-app-shell {
+  background: linear-gradient(180deg, #f8fbff 0%, #eff6ff 100%);
+}
+
+.mws-editor-layout {
+  background: transparent;
+}
+
+.mws-leftbar,
+.mws-rightbar {
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.mws-rightbar {
+  padding: 18px 16px 22px;
+  box-shadow: inset 0 0 0 1px rgba(226, 232, 240, 0.55);
+}
+
+.mws-page-panel {
+  padding: 24px 16px;
+}
+
+.mws-page-card {
+  border-radius: 20px;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.mws-page-card:hover {
+  transform: translateY(-1px);
+}
+
+.mws-page-preview {
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+}
+
+.mws-stage-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 26px 24px;
+  margin: 0 auto;
+  max-width: 994px;
+  background: rgba(255, 255, 255, 0.96);
+  border-top: 1px solid rgba(226, 232, 240, 0.92);
+}
+
+.mws-stage-zoom,
+.mws-stage-stats {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.mws-stage-zoom button {
+  min-width: 36px;
+  height: 36px;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 12px;
+  background: #fff;
+  color: #334155;
+  font-size: 18px;
+}
+
+.mws-stage-zoom span {
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.mws-stage-stats span {
+  border-radius: 14px;
+  padding: 10px 14px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  background: #f8fafc;
+  color: #475569;
+  font-size: 13px;
+}
+
+.mws-document-stage {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 16px 0 16px;
+}
+
+.mws-page-stack {
+  display: grid;
+  gap: 18px;
+}
+
+.mws-page-frame {
+  border-radius: 26px;
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.94);
+  box-shadow: 0 20px 55px rgba(15, 23, 42, 0.06);
+  overflow: hidden;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.mws-page-frame:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 22px 68px rgba(15, 23, 42, 0.08);
+}
+
+.mws-page-frame.is-active {
+  border-color: rgba(59, 130, 246, 0.45);
+}
+
+.mws-page-frame-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 24px;
+  background: #f8fbff;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.95);
+}
+
+.mws-page-frame-title strong {
+  display: block;
+  font-size: 13px;
+  letter-spacing: 0.03em;
+  color: #2563eb;
+}
+
+.mws-page-frame-title span,
+.mws-page-frame-status {
+  font-size: 13px;
+  color: #475569;
+}
+
+.mws-paper-shell {
+  padding: 24px;
+  background: #eff6ff;
+}
+
+.mws-paper {
+  min-height: 940px;
+  padding: 0;
+  border-radius: 26px;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  background: #ffffff;
+}
+
+.mws-editor-content {
+  min-height: 900px;
+  padding: 34px 36px;
+  max-width: 760px;
+  margin: 0 auto;
+  color: #0f172a;
+  background: transparent;
+  line-height: 1.75;
+}
+
+.mws-editor-preview {
+  min-height: 900px;
+  padding: 34px 36px;
+  max-width: 760px;
+  margin: 0 auto;
+  border-radius: 22px;
+  background: #f8fafc;
+  color: #334155;
+  line-height: 1.75;
+}
+
+.mws-figure-box {
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.mws-figure-box.is-selected {
+  border-color: rgba(37, 99, 235, 0.5);
+  box-shadow: 0 10px 30px rgba(37, 99, 235, 0.12);
+}
+
+.mws-paper-shell .mws-figure-box {
+  border-radius: 18px;
+}
+
+.figure-box:hover,
+.figure-box.selected {
+  border-color: #0f172a;
+}
+
+.mws-stage-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 24px 24px;
+  border-top: 1px solid rgba(226, 232, 240, 0.9);
+  background: #ffffff;
+}
+
+.mws-stage-footer button {
+  min-width: 34px;
+  height: 34px;
+  border-radius: 12px;
+}
+
+.mws-stage-footer span {
+  font-size: 13px;
+  color: #475569;
+}
+
+@media (max-width: 1160px) {
+  .mws-page-preview-content {
+    transform: scale(0.145);
+  }
 }
