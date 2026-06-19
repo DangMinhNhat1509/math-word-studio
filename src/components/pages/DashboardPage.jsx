@@ -70,7 +70,7 @@ export default function DashboardPage({ onNavigate, onAction }) {
             </Badge>
 
             <Text fw={950} className="mws-page-title">
-              Chào mừng trở lại, Nhat Minh!
+              Chào mừng trở lại!
             </Text>
 
             <Text c="dimmed" size="md" mt="xs" maw={620}>
@@ -192,3 +192,4 @@ export default function DashboardPage({ onNavigate, onAction }) {
     </div>
   );
 }
+

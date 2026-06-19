@@ -1,5 +1,24 @@
-﻿import { ActionIcon, Avatar, Box, Button, Group, Menu, Text, ThemeIcon, Tooltip } from "@mantine/core";
-import { Cloud, Code2, Copy, Download, FileText, MoreHorizontal, RefreshCcw, RotateCcw, Save, Sparkles } from "lucide-react";
+﻿import { useState } from "react";
+import { ActionIcon, Avatar, Button, Group, Menu, Text, ThemeIcon, Tooltip } from "@mantine/core";
+import {
+  ChevronDown,
+  Cloud,
+  Copy,
+  Database,
+  Download,
+  FileText,
+  LogOut,
+  Mail,
+  MoreHorizontal,
+  RefreshCcw,
+  RotateCcw,
+  Save,
+  Settings,
+  ShieldCheck,
+  User,
+} from "lucide-react";
+import { useAuth } from "../auth/authContext";
+import UserSettingsModal from "../settings/UserSettingsModal";
 
 const pageTitles = {
   dashboard: "Trang chủ",
@@ -18,72 +37,179 @@ export default function Topbar({
   onCopyHtml,
   onReset,
 }) {
+  const [settingsOpened, setSettingsOpened] = useState(false);
+
+  const title = pageTitles[activePage] || "Soạn đề Toán A4";
+  const savedText = activePage === "editor" && savedAt ? `Đã lưu ${savedAt}` : status || "Đã sẵn sàng";
+
+  const { displayName, email, signOutUser } = useAuth();
+  const shownName = displayName || email?.split("@")?.[0] || "Giáo viên";
+  const initial = shownName.trim().charAt(0).toUpperCase() || "N";
+
   return (
-    <header className="mws-topbar">
-      <Group justify="space-between" h="100%" wrap="nowrap">
-        <Group gap="sm" wrap="nowrap" className="mws-brand">
-          <ThemeIcon size={42} radius="md" variant="gradient" gradient={{ from: "blue", to: "indigo" }}>
-            <Text fw={950} size="lg">M</Text>
-          </ThemeIcon>
-          <Box>
-            <Text fw={900} size="lg" lh={1} c="blue.8">Math Word Studio</Text>
-            <Text size="xs" c="dimmed" fw={650} mt={4}>{pageTitles[activePage] || "Soạn đề Toán A4"}</Text>
-          </Box>
-        </Group>
+    <>
+      <header className="mws-topbar word-topbar">
+        <Group h="100%" justify="space-between" wrap="nowrap" gap="md">
+          <Group gap="md" wrap="nowrap" className="word-topbar-left">
+            <Group gap="sm" wrap="nowrap" className="word-brand">
+              <ThemeIcon size={38} radius="md" className="word-brand-logo">
+                M
+              </ThemeIcon>
 
-        <Group gap={8} wrap="nowrap" className="mws-topbar-center">
-          <Tooltip label="Hoàn tác">
-            <ActionIcon variant="default" size="lg" radius="md"><RotateCcw size={17} /></ActionIcon>
-          </Tooltip>
-          <Tooltip label="Làm lại">
-            <ActionIcon variant="default" size="lg" radius="md"><RefreshCcw size={17} /></ActionIcon>
-          </Tooltip>
-          <Group gap={4} className="mws-zoom-control">
-            <ActionIcon variant="subtle" size="sm">−</ActionIcon>
-            <Text fw={850} size="sm">100%</Text>
-            <ActionIcon variant="subtle" size="sm">+</ActionIcon>
-          </Group>
-        </Group>
+              <div>
+                <Text fw={900} size="md" lh={1.05}>
+                  Math Word Studio
+                </Text>
+                <Text size="xs" c="dimmed" fw={700}>
+                  Soạn đề · công thức · hình học
+                </Text>
+              </div>
+            </Group>
 
-        <Group gap="xs" wrap="nowrap" className="mws-topbar-actions">
-          <Group gap={6} className="mws-save-pill">
-            <Cloud size={15} />
-            <Text size="xs" fw={800}>{activePage === "editor" && savedAt ? `Đã lưu ${savedAt}` : "Đã sẵn sàng"}</Text>
+            <div className="word-title-divider" />
+
+            <button className="word-doc-title" type="button">
+              <FileText size={16} />
+              <span>{title}</span>
+              <ChevronDown size={14} />
+            </button>
           </Group>
 
-          <Button variant="default" radius="md" leftSection={<Save size={16} />} onClick={onSave}>
-            Lưu
-          </Button>
+          <Group gap="xs" wrap="nowrap" className="word-topbar-center">
+            <Tooltip label="Hoàn tác">
+              <ActionIcon variant="subtle" color="gray" radius="md" size="lg">
+                <RotateCcw size={18} />
+              </ActionIcon>
+            </Tooltip>
 
-          <Button className="mws-hide-md" variant="light" radius="md" leftSection={<Copy size={16} />} onClick={onCopyText}>
-            Copy chữ
-          </Button>
+            <Tooltip label="Làm lại">
+              <ActionIcon variant="subtle" color="gray" radius="md" size="lg">
+                <RefreshCcw size={18} />
+              </ActionIcon>
+            </Tooltip>
 
-          <Button radius="md" leftSection={<Download size={16} />} onClick={onPrint} className="mws-export-btn">
-            Xuất PDF
-          </Button>
+            <div className="word-zoom-pill">
+              <button type="button">−</button>
+              <strong>100%</strong>
+              <button type="button">+</button>
+            </div>
+          </Group>
 
-          <Menu shadow="md" width={210} position="bottom-end">
-            <Menu.Target>
-              <ActionIcon variant="default" size="lg" radius="md"><MoreHorizontal size={18} /></ActionIcon>
-            </Menu.Target>
-            <Menu.Dropdown>
-              <Menu.Label>Tài liệu</Menu.Label>
-              <Menu.Item leftSection={<Code2 size={15} />} onClick={onCopyHtml}>Copy HTML</Menu.Item>
-              <Menu.Item leftSection={<Sparkles size={15} />} onClick={onReset} color="red">Tạo lại tài liệu</Menu.Item>
-            </Menu.Dropdown>
-          </Menu>
+          <Group gap="xs" wrap="nowrap" className="word-topbar-actions">
+            <div className="word-save-pill">
+              <Cloud size={15} />
+              <span>{savedText}</span>
+            </div>
 
-          <Group gap={8} wrap="nowrap" className="mws-user">
-            <Avatar size={34} radius="xl" color="blue">N</Avatar>
-            <Box className="mws-hide-md">
-              <Text size="sm" fw={850} lh={1}>Nhat Minh</Text>
-              <Text size="xs" c="dimmed" lh={1.2}>Giáo viên</Text>
-            </Box>
+            <Button variant="default" radius="md" leftSection={<Save size={16} />} onClick={onSave}>
+              Lưu
+            </Button>
+
+            <Button
+              variant="light"
+              color="blue"
+              radius="md"
+              leftSection={<Copy size={16} />}
+              onClick={onCopyText}
+              className="word-copy-btn"
+            >
+              Copy chữ
+            </Button>
+
+            <Button
+              radius="md"
+              leftSection={<Download size={16} />}
+              onClick={onPrint}
+              className="mws-export-btn word-export-btn"
+            >
+              Xuất PDF
+            </Button>
+
+            <Menu shadow="md" width={220} position="bottom-end">
+              <Menu.Target>
+                <ActionIcon variant="default" radius="md" size="lg">
+                  <MoreHorizontal size={18} />
+                </ActionIcon>
+              </Menu.Target>
+
+              <Menu.Dropdown>
+                <Menu.Label>Tài liệu</Menu.Label>
+                <Menu.Item leftSection={<Copy size={15} />} onClick={onCopyHtml}>
+                  Copy HTML
+                </Menu.Item>
+                <Menu.Item color="red" leftSection={<RefreshCcw size={15} />} onClick={onReset}>
+                  Tạo lại tài liệu
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+
+            <Menu shadow="xl" width={280} position="bottom-end" radius="lg">
+              <Menu.Target>
+                <button type="button" className="word-account-button">
+                  <Avatar radius="xl" color="blue" size={36}>
+                    {initial}
+                  </Avatar>
+                  <div className="word-account-text">
+                    <Text size="sm" fw={900} lh={1.05}>
+                      {shownName}
+                    </Text>
+                    <Text size="xs" c="dimmed" fw={700} lineClamp={1}>
+                      Giáo viên
+                    </Text>
+                  </div>
+                  <ChevronDown size={14} />
+                </button>
+              </Menu.Target>
+
+              <Menu.Dropdown className="word-account-menu">
+                <div className="word-account-card">
+                  <Avatar radius="xl" color="blue" size={42}>
+                    {initial}
+                  </Avatar>
+                  <div>
+                    <Text fw={900} size="sm">
+                      {shownName}
+                    </Text>
+                    <Text size="xs" c="dimmed" lineClamp={1}>
+                      {email}
+                    </Text>
+                  </div>
+                </div>
+
+                <Menu.Divider />
+
+                <Menu.Item leftSection={<User size={16} />}>
+                  Hồ sơ cá nhân
+                </Menu.Item>
+
+                <Menu.Item leftSection={<Settings size={16} />} onClick={() => setSettingsOpened(true)}>
+                  Cài đặt
+                </Menu.Item>
+
+                <Menu.Item leftSection={<Database size={16} />}>
+                  Đồng bộ database
+                </Menu.Item>
+
+                <Menu.Item leftSection={<ShieldCheck size={16} />}>
+                  Bảo mật tài khoản
+                </Menu.Item>
+
+                <Menu.Item leftSection={<Mail size={16} />}>
+                  Email xác thực
+                </Menu.Item>
+
+                <Menu.Divider />
+
+                <Menu.Item color="red" leftSection={<LogOut size={16} />} onClick={signOutUser}>
+                  Đăng xuất
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
           </Group>
         </Group>
-      </Group>
-    </header>
+      </header>
+
+      <UserSettingsModal opened={settingsOpened} onClose={() => setSettingsOpened(false)} />
+    </>
   );
 }
-
