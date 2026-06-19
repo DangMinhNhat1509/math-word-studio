@@ -14,6 +14,7 @@
 } from "@mantine/core";
 import { ChevronLeft, FilePlus2, FileText, Plus, Trash2 } from "lucide-react";
 import AppNavigation from "./AppNavigation";
+import { sanitizeHtml } from "../../utils/sanitizer";
 
 function stripText(html = "") {
   const div = document.createElement("div");
@@ -72,7 +73,7 @@ export default function LeftSidebar({
                 <Paper className="mws-page-preview" withBorder radius="md">
                   <div
                     className="mws-page-preview-content"
-                    dangerouslySetInnerHTML={{ __html: page.html }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.html) }}
                   />
                 </Paper>
 
