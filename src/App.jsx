@@ -5,6 +5,7 @@ import { useEditorSelection } from "./hooks/useEditorSelection";
 import { useDocumentPages } from "./hooks/useDocumentPages";
 import { useGeometryEditor } from "./hooks/useGeometryEditor";
 import { getSavedAt } from "./utils/documentStorage";
+import FloatingScientificCalculator from "./components/FloatingScientificCalculator";
 import {
   copyHtml,
   copyPlainText,
@@ -432,6 +433,7 @@ export default function App() {
           </main>
         </div>
       )}
+      <FloatingScientificCalculator />
     </div>
   );
 }

@@ -115,26 +115,26 @@ export function useDocumentPages(editorRef, setSavedAt, setStatus) {
   }
 
   async function saveDocument() {
-    const savedPages = snapshotCurrentPage();
+    const savedPages = snapshotCurrentPage().map(ensurePageFigures);
 
     setDoc((oldDoc) => ({
       ...oldDoc,
-      pages: savedPages.map(ensurePageFigures),
+      pages: savedPages,
     }));
 
     savePagesToBrowser({
-      pages: savedPages.map(ensurePageFigures),
+      pages: savedPages,
       setSavedAt,
       setStatus,
     });
 
     try {
-      setStatus("Đang lưu lên cloud...");
+      setStatus("Đang lưu lên database...");
 
       const result = await saveCloudDocument({
         documentId: doc.cloudDocumentId,
         title: "Đề kiểm tra Toán 8 - Chương 1",
-        pages: savedPages.map(ensurePageFigures),
+        pages: savedPages,
       });
 
       setDoc((oldDoc) => ({
@@ -144,9 +144,9 @@ export function useDocumentPages(editorRef, setSavedAt, setStatus) {
 
       const now = new Date().toLocaleString("vi-VN");
       setSavedAt(now);
-      setStatus(`Đã lưu cloud ${result.pageCount} trang`);
+      setStatus(`Đã lưu database ${result.pageCount} trang`);
     } catch (error) {
-      setStatus(`Đã lưu máy, chưa lưu cloud: ${error.message}`);
+      setStatus(`Đã lưu máy, chưa lưu DB: ${error.message}`);
     }
   }
 
