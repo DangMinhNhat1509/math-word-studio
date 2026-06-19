@@ -15,6 +15,7 @@ import {
 } from "./utils/editorCommands";
 import { insertInlineMathField } from "./utils/mathLiveEditor";
 import { cleanEditorFormat } from "./utils/pasteCleaner";
+import { createDebounce } from "./utils/debounce";
 
 import Topbar from "./components/layout/Topbar";
 import LeftSidebar from "./components/layout/LeftSidebar";
@@ -22,6 +23,7 @@ import Toolbar from "./components/layout/Toolbar";
 import RightSidebar from "./components/layout/RightSidebar";
 import AppNavigation from "./components/layout/AppNavigation";
 import DocumentPage from "./components/editor/DocumentPage";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 import DashboardPage from "./components/pages/DashboardPage";
 import TemplatesPage from "./components/pages/TemplatesPage";
@@ -76,6 +78,13 @@ export default function App() {
     startDraw,
     clearActiveFigure,
   } = geometry;
+
+  // Debounced page update to prevent race conditions
+  const debouncedUpdateCurrentPage = useRef(
+    createDebounce((pageData) => {
+      updateCurrentPage(pageData);
+    }, 200)
+  ).current;
 
   function goEditor(message) {
     setActivePage("editor");
@@ -177,9 +186,7 @@ export default function App() {
       message,
     });
 
-    setTimeout(() => {
-      updateCurrentPage({ html: editorRef.current?.innerHTML || "" });
-    }, 0);
+    debouncedUpdateCurrentPage({ html: editorRef.current?.innerHTML || "" });
   }
 
   function insertSmartFormula(value = "") {
@@ -192,9 +199,7 @@ export default function App() {
       value,
     });
 
-    setTimeout(() => {
-      updateCurrentPage({ html: editorRef.current?.innerHTML || "" });
-    }, 0);
+    debouncedUpdateCurrentPage({ html: editorRef.current?.innerHTML || "" });
   }
 
   function insertTextBox() {
@@ -323,8 +328,9 @@ export default function App() {
   };
 
   return (
-    <div className="mws-app-shell">
-      <Topbar {...commonTopbarProps} />
+    <ErrorBoundary>
+      <div className="mws-app-shell">
+        <Topbar {...commonTopbarProps} />
 
       {activePage === "editor" ? (
         <div className="mws-editor-layout">
@@ -435,5 +441,6 @@ export default function App() {
       )}
       <FloatingScientificCalculator />
     </div>
+    </ErrorBoundary>
   );
 }
