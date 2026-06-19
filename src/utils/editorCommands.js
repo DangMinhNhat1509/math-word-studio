@@ -1,7 +1,17 @@
 import { getPlainTextWithMath, syncMathFields } from "./mathLiveEditor";
+import { sanitizeEditorInput } from "./sanitizer";
 
 export function runCommand(command, value = null) {
-  document.execCommand(command, false, value);
+  if (!command || typeof command !== 'string') {
+    console.error("Invalid command:", command);
+    return;
+  }
+  
+  try {
+    document.execCommand(command, false, value);
+  } catch (error) {
+    console.error(`Error running command "${command}":`, error);
+  }
 }
 
 export function insertHtmlToEditor({
@@ -13,7 +23,18 @@ export function insertHtmlToEditor({
   message = "Đã chèn nội dung",
 }) {
   const editor = editorRef.current;
-  if (!editor) return;
+  if (!editor) {
+    console.warn("Editor reference not available");
+    return;
+  }
+
+  // Validate and sanitize input
+  if (!html || typeof html !== 'string') {
+    console.error("Invalid HTML input:", html);
+    return;
+  }
+
+  const sanitizedHtml = sanitizeEditorInput(html);
 
   editor.focus();
   restoreSelection();
@@ -27,7 +48,7 @@ export function insertHtmlToEditor({
     selection?.addRange(range);
   }
 
-  runCommand("insertHTML", html);
+  runCommand("insertHTML", sanitizedHtml);
   rememberSelection();
   setStatus(message);
 }

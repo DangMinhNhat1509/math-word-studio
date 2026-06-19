@@ -74,7 +74,10 @@ export function cleanPastedHtml(html = "") {
 
     if (!allowed.includes(tag)) {
       const span = doc.createElement("span");
-      span.innerHTML = el.innerHTML;
+      // Use textContent for safety, or copy child nodes explicitly
+      while (el.firstChild) {
+        span.appendChild(el.firstChild);
+      }
       el.replaceWith(span);
     }
   });
