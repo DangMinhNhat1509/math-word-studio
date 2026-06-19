@@ -255,6 +255,49 @@
   border-radius: 15px !important;
 }
 
+/* Page refinements */
+.mws-dashboard-page,
+.mws-template-page,
+.mws-documents-page {
+  padding-bottom: 24px;
+}
+
+.mws-hero-card,
+.mws-template-card,
+.mws-doc-card,
+.mws-saved-doc-card,
+.mws-folder-panel {
+  backdrop-filter: blur(10px);
+}
+
+.mws-template-actions {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px !important;
+}
+
+.mws-template-actions .mantine-Button-root,
+.mws-doc-actions .mantine-Button-root {
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.mws-template-actions .mantine-Button-root {
+  height: 36px !important;
+  padding-inline: 12px !important;
+  font-size: 12px !important;
+}
+
+.mws-doc-actions {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px !important;
+}
+
+.mws-doc-actions .mantine-Button-root {
+  justify-content: center;
+}
+
 /* Hide leftovers */
 .page-toolbar,
 .sidebar-section,

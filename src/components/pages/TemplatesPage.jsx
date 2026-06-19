@@ -107,7 +107,7 @@ export default function TemplatesPage({ templates, onUseTemplate }) {
               <Text fw={900} mt="sm" lineClamp={2}>{title}</Text>
               <Text size="sm" c="dimmed" mt={4}>{meta}</Text>
 
-              <Group grow mt="md">
+              <Group grow mt="md" className="mws-template-actions">
                 <Button
                   variant="default"
                   radius="md"
