@@ -1,4 +1,4 @@
-﻿import {
+import {
   Badge,
   Box,
   Button,
@@ -13,10 +13,14 @@
 import {
   ArrowRight,
   BookOpen,
+  CalendarDays,
+  CircleCheckBig,
   FilePlus2,
+  FileText,
   FolderOpen,
   LayoutTemplate,
   PenLine,
+  ScanSearch,
   Sigma,
   Triangle,
 } from "lucide-react";
@@ -26,6 +30,37 @@ const recentDocs = [
   "Phiếu bài tập Toán 9 - Học kỳ I",
   "Đề cương ôn tập Toán 7",
   "Đề kiểm tra Toán 6 - HKI",
+];
+
+const overviewStats = [
+  {
+    title: "Bài viết",
+    value: "32",
+    note: "Tổng số đã viết",
+    icon: FileText,
+    color: "blue",
+  },
+  {
+    title: "Bản nháp",
+    value: "18",
+    note: "Đang sửa dở",
+    icon: CalendarDays,
+    color: "green",
+  },
+  {
+    title: "Bản chốt",
+    value: "14",
+    note: "Sẵn sàng xuất",
+    icon: CircleCheckBig,
+    color: "orange",
+  },
+  {
+    title: "Mẫu dùng",
+    value: "5",
+    note: "Đã lưu gần đây",
+    icon: ScanSearch,
+    color: "violet",
+  },
 ];
 
 const quickStarts = [
@@ -122,10 +157,38 @@ export default function DashboardPage({ onNavigate, onAction }) {
         </Grid>
       </Paper>
 
+      <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="md" mt="md">
+        {overviewStats.map(({ title, value, note, icon: Icon, color }) => (
+          <Card key={title} withBorder radius="xl" className="mws-overview-card">
+            <Group justify="space-between" align="flex-start" wrap="nowrap">
+              <div>
+                <Text size="sm" c="dimmed" fw={700}>
+                  {title}
+                </Text>
+                <Text fw={950} className="mws-overview-value">
+                  {value}
+                </Text>
+                <Text size="xs" c="dimmed">
+                  {note}
+                </Text>
+              </div>
+
+              <ThemeIcon size={38} radius="md" color={color} variant="light">
+                <Icon size={18} />
+              </ThemeIcon>
+            </Group>
+          </Card>
+        ))}
+      </SimpleGrid>
+
       <Group justify="space-between" mt="xl" mb="md">
         <Box>
-          <Text fw={900} size="xl">Tài liệu gần đây</Text>
-          <Text size="sm" c="dimmed">Tiếp tục các đề đang soạn</Text>
+          <Text fw={900} size="xl">
+            Tài liệu gần đây
+          </Text>
+          <Text size="sm" c="dimmed">
+            Tiếp tục các đề đang soạn
+          </Text>
         </Box>
 
         <Button
@@ -142,9 +205,9 @@ export default function DashboardPage({ onNavigate, onAction }) {
           <Card
             key={doc}
             withBorder
-            radius="lg"
+            radius="xl"
             shadow="sm"
-            className="mws-doc-card"
+            className="mws-doc-card mws-recent-card"
             onClick={() => onAction("open")}
           >
             <div className="mws-doc-thumb">
@@ -165,8 +228,12 @@ export default function DashboardPage({ onNavigate, onAction }) {
 
       <Group justify="space-between" mt="xl" mb="md">
         <Box>
-          <Text fw={900} size="xl">Bắt đầu nhanh</Text>
-          <Text size="sm" c="dimmed">Các công cụ giáo viên hay dùng nhất</Text>
+          <Text fw={900} size="xl">
+            Bắt đầu nhanh
+          </Text>
+          <Text size="sm" c="dimmed">
+            Các công cụ giáo viên hay dùng nhất
+          </Text>
         </Box>
       </Group>
 
@@ -175,21 +242,24 @@ export default function DashboardPage({ onNavigate, onAction }) {
           <Card
             key={title}
             withBorder
-            radius="lg"
+            radius="xl"
             shadow="sm"
-            className="mws-feature-card"
+            className="mws-feature-card mws-quick-card"
             onClick={() => onAction(action)}
           >
             <ThemeIcon size={42} radius="md" color={color} variant="light">
               <Icon size={22} />
             </ThemeIcon>
 
-            <Text fw={900} mt="md">{title}</Text>
-            <Text size="sm" c="dimmed" mt={5}>{desc}</Text>
+            <Text fw={900} mt="md">
+              {title}
+            </Text>
+            <Text size="sm" c="dimmed" mt={5}>
+              {desc}
+            </Text>
           </Card>
         ))}
       </SimpleGrid>
     </div>
   );
 }
-
