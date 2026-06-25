@@ -423,7 +423,6 @@ export default function App() {
 
             {activePage === "templates" && (
               <TemplatesPage
-                templates={TEMPLATES}
                 onUseTemplate={handleUseTemplate}
               />
             )}
@@ -433,7 +432,6 @@ export default function App() {
                 onOpenEditor={handleOpenDocument}
                 onCreateNew={handleCreateNewDocument}
                 onExportDocument={handleExportDocument}
-                onDocumentAction={handleDocumentAction}
               />
             )}
           </main>

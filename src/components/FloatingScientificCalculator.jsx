@@ -215,6 +215,7 @@ export default function FloatingScientificCalculator() {
     setAlpha(false);
   }
 
+
   function deleteLast() {
     setError("");
     setExpression((prev) => prev.slice(0, -1));
