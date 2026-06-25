@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import {
   Badge,
   Box,
@@ -10,61 +10,114 @@ import {
   Text,
   TextInput,
 } from "@mantine/core";
-import { Eye, LayoutTemplate, Search } from "lucide-react";
+import { Eye, LayoutTemplate, Lock, Search } from "lucide-react";
+import { listTemplates, loadTemplateContent } from "../../services/documentService";
 
 const filters = [
   "Tất cả",
+  "Tự luận",
+  "Trắc nghiệm",
   "Kiểm tra 15 phút",
   "Kiểm tra 1 tiết",
   "Giữa kỳ",
   "Học kỳ",
   "Ôn thi vào 10",
-  "Trắc nghiệm",
-  "Tự luận",
 ];
 
-const templateCards = [
-  ["Đề kiểm tra Toán 8 - Đại số", "Lớp 8 • 45 phút • Tự luận", "Tự luận"],
-  ["Phiếu bài tập Hình học 7", "Lớp 7 • 1 tiết • Tự luận", "Tự luận"],
-  ["Đề kiểm tra 15 phút - Toán 9", "Lớp 9 • 15 phút • Trắc nghiệm", "Kiểm tra 15 phút"],
-  ["Đề giữa kỳ 1 - Toán 8", "Lớp 8 • 60 phút • Tự luận", "Giữa kỳ"],
-  ["Ôn thi vào 10 - Đề 01", "Lớp 9 • 90 phút • Tự luận", "Ôn thi vào 10"],
-  ["Đề học kỳ 1 - Toán 7", "Lớp 7 • 90 phút • Tự luận", "Học kỳ"],
-  ["Trắc nghiệm Toán 6 - Chương 1", "Lớp 6 • 45 phút • Trắc nghiệm", "Trắc nghiệm"],
-  ["Bài tập nâng cao Hình học 9", "Lớp 9 • Tự luận", "Tự luận"],
-];
-
-export default function TemplatesPage({ templates, onUseTemplate }) {
+export default function TemplatesPage({ onUseTemplate }) {
+  const [templates, setTemplates] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("Tất cả");
   const [query, setQuery] = useState("");
-  const [previewTemplate, setPreviewTemplate] = useState(null);
+  const [previewContent, setPreviewContent] = useState(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
-  const visibleCards = useMemo(() => {
-    return templateCards.filter(([title, meta, type]) => {
-      const matchFilter = activeFilter === "Tất cả" || type === activeFilter || meta.includes(activeFilter);
-      const matchQuery = `${title} ${meta}`.toLowerCase().includes(query.toLowerCase().trim());
+  useEffect(() => {
+    async function load() {
+      try {
+        setLoading(true);
+        const data = await listTemplates();
+        setTemplates(data);
+      } catch (err) {
+        console.error("Lỗi load templates:", err);
+        setTemplates([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
+
+  const visibleTemplates = useMemo(() => {
+    return templates.filter((tpl) => {
+      const matchFilter =
+        activeFilter === "Tất cả" || tpl.category === activeFilter;
+      const matchQuery = `${tpl.name} ${tpl.description || ""} ${tpl.subject || ""} ${tpl.grade || ""}`
+        .toLowerCase()
+        .includes(query.toLowerCase().trim());
       return matchFilter && matchQuery;
     });
-  }, [activeFilter, query]);
+  }, [templates, activeFilter, query]);
+
+  async function handlePreview(tpl) {
+    setPreviewLoading(true);
+    try {
+      const content = await loadTemplateContent(tpl.id);
+      setPreviewContent({
+        name: content.name,
+        html: content.html_content,
+      });
+    } catch (err) {
+      console.error("Lỗi load template content:", err);
+      setPreviewContent({
+        name: tpl.name,
+        html: "<p>Không thể tải nội dung mẫu.</p>",
+      });
+    } finally {
+      setPreviewLoading(false);
+    }
+  }
+
+  async function handleUseTemplate(tpl) {
+    try {
+      const content = await loadTemplateContent(tpl.id);
+      onUseTemplate({
+        name: content.name,
+        html: content.html_content,
+      });
+    } catch (err) {
+      console.error("Lỗi khi sử dụng template:", err);
+    }
+  }
 
   return (
     <div className="mws-template-page">
       <Modal
-        opened={Boolean(previewTemplate)}
-        onClose={() => setPreviewTemplate(null)}
-        title={previewTemplate?.title || "Xem trước mẫu đề"}
+        opened={Boolean(previewContent)}
+        onClose={() => setPreviewContent(null)}
+        title={previewContent?.name || "Xem trước mẫu đề"}
         size="xl"
         radius="lg"
       >
-        <div className="mws-preview-modal-paper">
-          <div dangerouslySetInnerHTML={{ __html: previewTemplate?.template?.html || "" }} />
-        </div>
+        {previewLoading ? (
+          <Text ta="center" py="xl">
+            Đang tải...
+          </Text>
+        ) : (
+          <div className="mws-preview-modal-paper">
+            <div dangerouslySetInnerHTML={{ __html: previewContent?.html || "" }} />
+          </div>
+        )}
       </Modal>
 
       <Group justify="space-between" align="flex-end" mb="lg">
         <Box>
-          <Text fw={950} className="mws-page-title">Mẫu đề</Text>
-          <Text c="dimmed">Chọn mẫu có sẵn để tạo đề nhanh chóng và chuyên nghiệp.</Text>
+          <Text fw={950} className="mws-page-title">
+            Mẫu đề
+          </Text>
+          <Text c="dimmed">
+            Chọn mẫu có sẵn để tạo đề nhanh chóng và chuyên nghiệp.
+          </Text>
         </Box>
 
         <TextInput
@@ -90,29 +143,51 @@ export default function TemplatesPage({ templates, onUseTemplate }) {
         ))}
       </Group>
 
-      <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 4, xl: 5 }} spacing="md">
-        {visibleCards.map(([title, meta], index) => {
-          const template = templates[index % templates.length];
-
-          return (
-            <Card key={title} withBorder radius="lg" shadow="sm" className="mws-template-card">
+      {loading ? (
+        <Text ta="center" py="xl" c="dimmed">
+          Đang tải mẫu đề...
+        </Text>
+      ) : visibleTemplates.length === 0 ? (
+        <Text ta="center" py="xl" c="dimmed">
+          {query
+            ? "Không tìm thấy mẫu đề phù hợp."
+            : "Chưa có mẫu đề nào."}
+        </Text>
+      ) : (
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 4, xl: 5 }} spacing="md">
+          {visibleTemplates.map((tpl) => (
+            <Card
+              key={tpl.id}
+              withBorder
+              radius="lg"
+              shadow="sm"
+              className="mws-template-card"
+            >
               <div className="mws-template-thumb">
-                <h4>{index % 2 ? "PHIẾU BÀI TẬP" : "ĐỀ KIỂM TRA TOÁN"}</h4>
-                <p>Câu 1. Rút gọn biểu thức sau:</p>
-                <p>A. ... &nbsp; B. ... &nbsp; C. ... &nbsp; D. ...</p>
+                <h4>{tpl.subject ? `${tpl.subject} ${tpl.grade || ""}` : "TOÁN"}</h4>
+                <p>{tpl.description?.slice(0, 60) || "Nội dung mẫu đề..."}</p>
                 <div className="mws-thumb-line" />
-                <p>Bài 2. Cho tam giác ABC...</p>
               </div>
 
-              <Text fw={900} mt="sm" lineClamp={2}>{title}</Text>
-              <Text size="sm" c="dimmed" mt={4}>{meta}</Text>
+              <Text fw={900} mt="sm" lineClamp={2}>
+                {tpl.name}
+              </Text>
+              <Text size="sm" c="dimmed" mt={4}>
+                {tpl.subject ? `Lớp ${tpl.grade || ""}` : ""} • {tpl.category || "Tự luận"}
+              </Text>
+
+              {tpl.is_premium && (
+                <Badge variant="light" color="yellow" mt={4}>
+                  <Lock size={11} /> Premium • {tpl.price?.toLocaleString()}đ
+                </Badge>
+              )}
 
               <Group grow mt="md" className="mws-template-actions">
                 <Button
                   variant="default"
                   radius="md"
                   leftSection={<Eye size={15} />}
-                  onClick={() => setPreviewTemplate({ title, template })}
+                  onClick={() => handlePreview(tpl)}
                 >
                   Xem trước
                 </Button>
@@ -120,18 +195,18 @@ export default function TemplatesPage({ templates, onUseTemplate }) {
                 <Button
                   radius="md"
                   leftSection={<LayoutTemplate size={15} />}
-                  onClick={() => onUseTemplate(template)}
+                  onClick={() => handleUseTemplate(tpl)}
                 >
                   Dùng mẫu
                 </Button>
               </Group>
             </Card>
-          );
-        })}
-      </SimpleGrid>
+          ))}
+        </SimpleGrid>
+      )}
 
       <Text ta="center" mt="xl" c="dimmed" size="sm">
-        Đã hiển thị {visibleCards.length} mẫu đề
+        Đã hiển thị {visibleTemplates.length} mẫu đề
       </Text>
     </div>
   );
